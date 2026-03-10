@@ -9,6 +9,8 @@ coverage/
 # Production
 dist/
 build/
+backend/mongodb-macos-x86_64-7.0.5/
+backend/mongodb-macos-x86_64-7.0.5.tgz
 
 # Environment variables (CRITICAL)
 .env

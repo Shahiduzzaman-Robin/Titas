@@ -53,4 +53,22 @@ A modern, high-performance community platform for the students of **Dhaka Univer
    ```
 
 ---
+## 📸 Project Screenshots
+
+### 🏠 Home Page
+![Home Page](screenshots/home.png)
+
+### 👥 Student Directory
+![Student Directory](screenshots/directory.png)
+
+### 🔐 Unified Login
+![Login Page](screenshots/login.png)
+
+### 📊 Admin Dashboard
+![Admin Dashboard](screenshots/admin.png)
+
+### ✍️ Blog System
+![Blog Page](screenshots/blog.png)
+
+---
 *Developed as part of the Titas DU Digital Transformation Project.*
