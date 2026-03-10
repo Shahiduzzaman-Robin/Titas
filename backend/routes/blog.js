@@ -67,23 +67,7 @@ const seedDefaultCategories = async () => {
 
 seedDefaultCategories().catch((err) => console.error('Category seed error:', err.message));
 
-const protectAdmin = async (req, res, next) => {
-    let token;
-    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-        try {
-            token = req.headers.authorization.split(' ')[1];
-            const decoded = jwt.verify(token, process.env.JWT_SECRET || 'titas_secret_key');
-            req.admin = await Admin.findById(decoded.id).select('-password');
-            if (!req.admin) {
-                return res.status(401).json({ msg: 'Not authorized as an admin' });
-            }
-            return next();
-        } catch (error) {
-            return res.status(401).json({ msg: 'Not authorized, token failed' });
-        }
-    }
-    return res.status(401).json({ msg: 'Not authorized, no token' });
-};
+const { protectAdmin } = require('../middleware/auth');
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, 'uploads/'),

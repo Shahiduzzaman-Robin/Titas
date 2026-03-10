@@ -1,13 +1,15 @@
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const studentRoutes = require('./routes/students');
 const adminRoutes = require('./routes/admin');
-const path = require('path');
 const blogRoutes = require('./routes/blog');
 const contactRoutes = require('./routes/contactRoutes');
 const noticeRoutes = require('./routes/noticeRoutes');
+const galleryRoutes = require('./routes/galleryRoutes');
+const eventRoutes = require('./routes/eventRoutes');
 const BlogPost = require('./models/BlogPost');
 
 const app = express();
@@ -98,6 +100,8 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/blog', blogRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/notices', noticeRoutes);
+app.use('/api/gallery', galleryRoutes);
+app.use('/api/events', eventRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -105,7 +109,7 @@ app.use((err, req, res, next) => {
     res.status(500).json({ success: false, message: err.message || 'Internal Server Error' });
 });
 
-const PORT = process.env.PORT || 5001;
+const PORT = process.env.PORT || 5010;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });

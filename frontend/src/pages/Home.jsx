@@ -6,6 +6,7 @@ import { API_BASE_URL } from '../constants';
 import TrainAnimation from '../components/TrainAnimation';
 import ContactForm from '../components/ContactForm';
 import Footer from '../components/Footer';
+import fruitFest from '../assets/hero/Fruit_Fest.jpg';
 import '../styles/Home.css';
 
 const Home = () => {
@@ -17,6 +18,12 @@ const Home = () => {
     const [president, setPresident] = useState(null);
     const [secretary, setSecretary] = useState(null);
     const [loadingCommittee, setLoadingCommittee] = useState(true);
+
+    // States for Events and Gallery
+    const [events, setEvents] = useState([]);
+    const [loadingEvents, setLoadingEvents] = useState(true);
+    const [gallery, setGallery] = useState([]);
+    const [loadingGallery, setLoadingGallery] = useState(true);
 
     useEffect(() => {
         const fetchPosts = async () => {
@@ -46,11 +53,11 @@ const Home = () => {
 
         const fetchCommittee = async () => {
             try {
-                // Fetch all approved students to scan for President and Secretary designations
+                // Fetch all approved students to scan for President and Secretary
                 const res = await axios.get(`${API_BASE_URL}/api/students?status=approved`);
                 const students = res.data.students || [];
 
-                // Extract the exact President and Secretary using their explicitly known unique emails
+                // Extract specific leaders by email (Stable for the year)
                 const pres = students.find(s => s.email === 'rakibulhasan.du7480@gmail.com');
                 const sec = students.find(s => s.email === 'jannatt1610@gmail.com');
 
@@ -63,8 +70,37 @@ const Home = () => {
             }
         };
 
+        const fetchEvents = async () => {
+            try {
+                const res = await axios.get(`${API_BASE_URL}/api/events`);
+                if (res.data.success) {
+                    setEvents(res.data.data);
+                }
+            } catch (err) {
+                console.error('Failed to fetch events', err);
+            } finally {
+                setLoadingEvents(false);
+            }
+        };
+
+        const fetchGallery = async () => {
+            try {
+                const res = await axios.get(`${API_BASE_URL}/api/gallery`);
+                if (res.data.success) {
+                    setGallery(res.data.data);
+                }
+            } catch (err) {
+                console.error('Failed to fetch gallery', err);
+            } finally {
+                setLoadingGallery(false);
+            }
+        };
+
         fetchPosts();
+        fetchNotices();
         fetchCommittee();
+        fetchEvents();
+        fetchGallery();
     }, []);
 
     const formatDate = (dateStr) => {
@@ -82,8 +118,8 @@ const Home = () => {
                 <div className="hero-modern-overlay"></div>
                 {/* Fallback image of Dhaka University campus / curated aesthetic */}
                 <img
-                    src="https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=2000&q=80"
-                    alt="Dhaka University Campus"
+                    src={fruitFest}
+                    alt="Titas Fruit Fest"
                     className="hero-modern-bg"
                 />
 
@@ -187,33 +223,41 @@ const Home = () => {
                     </div>
 
                     <div className="events-grid">
-                        {/* Dummy Upcoming Event */}
-                        <div className="event-modern-card glass-panel">
-                            <div className="event-date">
-                                <span className="day">১৫</span>
-                                <span className="month">এপ্রিল</span>
+                        {loadingEvents ? (
+                            <div className="loading-state col-span-2">Loading events...</div>
+                        ) : events.length > 0 ? (
+                            events.map(event => (
+                                <div key={event._id} className="event-modern-card glass-panel">
+                                    <div className="event-date">
+                                        <span className="day">{new Date(event.date).getDate()}</span>
+                                        <span className="month">{new Date(event.date).toLocaleDateString('bn-BD', { month: 'long' })}</span>
+                                    </div>
+                                    <div className="event-content">
+                                        <h3 className="bn-text">{event.title}</h3>
+                                        <p className="event-meta"><MapPin size={14} /> {event.location}</p>
+                                        <p className="event-desc line-clamp-2">{event.description}</p>
+                                        {event.link ? (
+                                            <a href={event.link} target="_blank" rel="noreferrer" className="btn-text-link mt-auto">Learn More <ArrowRight size={16} /></a>
+                                        ) : (
+                                            <div className="mt-auto h-4"></div>
+                                        )}
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="event-modern-card glass-panel highlight">
+                                <div className="event-icon">
+                                    <Users size={24} />
+                                </div>
+                                <div className="event-content">
+                                    <div className="badge-new">New</div>
+                                    <h3 className="bn-text">সদস্য সংগ্রহ চলছে</h3>
+                                    <p className="event-meta"><Calendar size={14} /> আমাদের সাথেই থাকুন</p>
+                                    <p className="event-desc">২০২৩-২৪ সেশনের নবীন শিক্ষার্থীদের তিতাস ডেটাবেজে তথ্য যুক্ত করার আহ্বান করা হচ্ছে।</p>
+                                    <Link to="/register" className="btn-text-link mt-auto">Register Now <ArrowRight size={16} /></Link>
+                                </div>
                             </div>
-                            <div className="event-content">
-                                <h3 className="bn-text">নবীন বরণ ও ইফতার মাহফিল ২০২৪</h3>
-                                <p className="event-meta"><MapPin size={14} /> টিএসসি, ঢাকা বিশ্ববিদ্যালয়</p>
-                                <p className="event-desc">নতুন শিক্ষার্থীদের বরণ করে নিতে এবং পবিত্র রমজানের রহমত কামনায় আমাদের বাৎসরিক ইফতার আয়োজন।</p>
-                                <button className="btn-text-link mt-auto">Learn More <ArrowRight size={16} /></button>
-                            </div>
-                        </div>
-
-                        {/* Dummy Announcement */}
-                        <div className="event-modern-card glass-panel highlight">
-                            <div className="event-icon">
-                                <Users size={24} />
-                            </div>
-                            <div className="event-content">
-                                <div className="badge-new">New</div>
-                                <h3 className="bn-text">সদস্য সংগ্রহ চলছে</h3>
-                                <p className="event-meta"><Calendar size={14} /> Deadline: 30 April, 2024</p>
-                                <p className="event-desc">২০২৩-২৪ সেশনের নবীন শিক্ষার্থীদের তিতাস ডেটাবেজে তথ্য যুক্ত করার আহ্বান করা হচ্ছে।</p>
-                                <Link to="/register" className="btn-text-link mt-auto">Register Now <ArrowRight size={16} /></Link>
-                            </div>
-                        </div>
+                        )}
                     </div>
                 </div>
             </section>
@@ -360,23 +404,24 @@ const Home = () => {
                         <p className="section-subtitle">Glimpses of our vibrant community life</p>
                     </div>
 
-                    <div className="gallery-masonry">
-                        <div className="gallery-item large">
-                            <img src="https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=800&q=80" alt="Gallery 1" />
-                            <div className="gallery-overlay"><span>Cultural Event</span></div>
-                        </div>
-                        <div className="gallery-item">
-                            <img src="https://images.unsplash.com/photo-1529070538774-1843cb3265df?auto=format&fit=crop&w=600&q=80" alt="Gallery 2" />
-                            <div className="gallery-overlay"><span>Annual Picnic</span></div>
-                        </div>
-                        <div className="gallery-item">
-                            <img src="https://images.unsplash.com/photo-1491438590914-bc09fcaaf77a?auto=format&fit=crop&w=600&q=80" alt="Gallery 3" />
-                            <div className="gallery-overlay"><span>Sports Day</span></div>
-                        </div>
-                        <div className="gallery-item wide">
-                            <img src="https://images.unsplash.com/photo-1523580494863-6f3031224c94?auto=format&fit=crop&w=800&q=80" alt="Gallery 4" />
-                            <div className="gallery-overlay"><span>Blood Donation Camp</span></div>
-                        </div>
+                    <div className="gallery-masonry-wrapper">
+                        {loadingGallery ? (
+                            <div className="loading-state col-span-3">Loading gallery...</div>
+                        ) : gallery.length > 0 ? (
+                            gallery.slice(0, 8).map((img) => (
+                                <div key={img._id} className="gallery-item-masonry">
+                                    <img src={`${API_BASE_URL}${img.imageUrl}`} alt={img.title} />
+                                    <div className="gallery-overlay">
+                                        <div className="overlay-content">
+                                            <span className="bn-text">{img.title}</span>
+                                            <span className="en-text text-sm opacity-80">{img.category}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="empty-state text-center w-full col-span-3">গ্যালারিতে কোনো ছবি পাওয়া যায়নি।</div>
+                        )}
                     </div>
                 </div>
             </section>
@@ -391,7 +436,7 @@ const Home = () => {
 
                     <div className="committee-grid dual">
                         {loadingCommittee ? (
-                            <div className="loading-state col-span-2">Loading committee members...</div>
+                            <div className="loading-state col-span-2">Loading leadership...</div>
                         ) : (
                             <>
                                 {/* PRESIDENT CARD */}
@@ -402,7 +447,7 @@ const Home = () => {
                                             alt={president?.nameEn || "President"}
                                         />
                                     </div>
-                                    <h3 className="bn-text mt-4">{president?.nameEn || 'Shantonio'}</h3>
+                                    <h3 className="bn-text mt-4">{president?.nameEn || 'Rakibul Hasan'}</h3>
                                     <p className="role text-primary font-medium">{president?.titasDesignation || 'সভাপতি'}</p>
                                     <p className="dept text-muted text-sm mt-1">{president?.department || 'ঢাকা বিশ্ববিদ্যালয়'}</p>
 
@@ -421,7 +466,7 @@ const Home = () => {
                                             alt={secretary?.nameEn || "General Secretary"}
                                         />
                                     </div>
-                                    <h3 className="bn-text mt-4">{secretary?.nameEn || 'General Secretary'}</h3>
+                                    <h3 className="bn-text mt-4">{secretary?.nameEn || 'Jannatul Ferdous'}</h3>
                                     <p className="role text-primary font-medium">{secretary?.titasDesignation || 'সাধারণ সম্পাদক'}</p>
                                     <p className="dept text-muted text-sm mt-1">{secretary?.department || 'ঢাকা বিশ্ববিদ্যালয়'}</p>
 

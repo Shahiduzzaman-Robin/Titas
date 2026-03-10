@@ -1,3 +1,38 @@
+@font-face {
+  font-family: 'Solaiman Lipi';
+  src: url('/fonts/SolaimanLipi.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Hind Siliguri';
+  src: url('/fonts/Hind_Siliguri/HindSiliguri-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Hind Siliguri';
+  src: url('/fonts/Hind_Siliguri/HindSiliguri-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Hind Siliguri';
+  src: url('/fonts/Hind_Siliguri/HindSiliguri-SemiBold.ttf') format('truetype');
+  font-weight: 600;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Hind Siliguri';
+  src: url('/fonts/Hind_Siliguri/HindSiliguri-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+}
+
 .blog-page,
 .blog-post-page {
   padding: 2.5rem 0 5rem;
@@ -7,6 +42,7 @@
     radial-gradient(circle at 50% 80%, rgba(20, 184, 166, 0.12), transparent 45%),
     #f8fafc;
   min-height: 100vh;
+  font-family: 'Solaiman Lipi', sans-serif;
 }
 
 /* Glassmorphism utility */
@@ -56,6 +92,7 @@
 }
 
 .blog-title {
+  font-family: 'Hind Siliguri', sans-serif;
   font-size: clamp(2.5rem, 5vw, 4rem);
   line-height: 1.15;
   color: #0f172a;
@@ -127,6 +164,7 @@
 }
 
 .featured-post-content h2 {
+  font-family: 'Hind Siliguri', sans-serif;
   font-size: 2.2rem;
   color: #0f172a;
   line-height: 1.25;
@@ -337,6 +375,7 @@
 }
 
 .blog-card-body h3 {
+  font-family: 'Hind Siliguri', sans-serif;
   font-size: 1.35rem;
   color: #0f172a;
   line-height: 1.35;
@@ -441,6 +480,7 @@
 }
 
 .blog-post-header h1 {
+  font-family: 'Hind Siliguri', sans-serif;
   margin-top: 1rem;
   margin-bottom: 0;
   color: #0f172a;
@@ -534,6 +574,7 @@
 .blog-post-content h1,
 .blog-post-content h2,
 .blog-post-content h3 {
+  font-family: 'Hind Siliguri', sans-serif;
   margin-top: 3rem;
   margin-bottom: 1.25rem;
   color: #0f172a;
@@ -631,6 +672,7 @@
 }
 
 .related-posts-wrap h3 {
+  font-family: 'Hind Siliguri', sans-serif;
   font-size: 2.2rem;
   color: #0f172a;
 }

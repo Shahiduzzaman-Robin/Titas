@@ -37,7 +37,6 @@ export const AdminNavbar = ({ active }) => {
     return (
         <nav className="admin-navbar">
             <div className="admin-nav-logo">
-                <div className="admin-nav-logo-icon">🌊</div>
                 <div>
                     <h1 className="bn-text">তিতাস - অ্যাডমিন প্যানেল</h1>
                     <p>ADMINISTRATOR</p>
@@ -85,8 +84,9 @@ export const AdminNavbar = ({ active }) => {
                         </span>
                     )}
                 </Link>
-                <Link to="/admin/dashboard" className="admin-nav-link bn-text">এসএমএস ম্যানেজমেন্ট</Link>
                 <Link to="/admin/notices" className={`admin-nav-link bn-text ${active === 'notices' ? 'active' : ''}`}>নোটিস বোর্ড</Link>
+                <Link to="/admin/gallery" className={`admin-nav-link bn-text ${active === 'gallery' ? 'active' : ''}`}>গ্যালারি</Link>
+                <Link to="/admin/events" className={`admin-nav-link bn-text ${active === 'events' ? 'active' : ''}`}>ইভেন্ট</Link>
             </div>
             <div className="admin-nav-right">
                 <button className="admin-lang-btn"><Globe size={14} /> EN</button>

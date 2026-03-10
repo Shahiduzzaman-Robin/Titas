@@ -248,7 +248,8 @@ const AdminDashboard = () => {
                             { icon: <MessageSquare size={22} />, label: 'বার্তাসমূহ পরিচালনা করুন', href: '/admin/messages' },
                             { icon: <AlertCircle size={22} />, label: 'জরুরী নোটিশ পরিচালনা করুন', href: '/admin/notices' },
                             { icon: <Edit size={22} />, label: 'সম্পাদনা পরিচালনা করুন', href: '/admin/edits' },
-                            { icon: <Globe size={22} />, label: 'ব্যাচ এসএমএস পাঠান', href: '#' },
+                            { icon: <Image size={22} />, label: 'গ্যালারি পরিচালনা করুন', href: '/admin/gallery' },
+                            { icon: <Calendar size={22} />, label: 'ইভেন্ট পরিচালনা করুন', href: '/admin/events' },
                             { icon: <Users size={22} />, label: 'রিপোর্ট তৈরি করুন', href: '#' },
                             { icon: <Activity size={22} />, label: 'লগ পরিচালনা করুন', href: '#' },
                         ].map((a, i) => (
