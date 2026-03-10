@@ -45,10 +45,20 @@ router.post('/', upload.single('photo'), async (req, res) => {
             bloodGroup, hall, gender, isEmployed, password
         } = req.body;
 
-        // Check if student already exists
-        let studentExists = await Student.findOne({ regNo });
-        if (studentExists) {
-            return res.status(400).json({ msg: 'Student with this Registration Number already exists.' });
+        // Check if student already exists by Reg No, Mobile, or Email
+        let regNoExists = await Student.findOne({ regNo });
+        if (regNoExists) {
+            return res.status(400).json({ msg: 'এই রেজিস্ট্রেশন নম্বর দিয়ে ইতিমধ্যে নিবন্ধন করা হয়েছে।' });
+        }
+
+        let mobileExists = await Student.findOne({ mobile });
+        if (mobileExists) {
+            return res.status(400).json({ msg: 'এই মোবাইল নম্বর দিয়ে ইতিমধ্যে নিবন্ধন করা হয়েছে।' });
+        }
+
+        let emailExists = await Student.findOne({ email });
+        if (emailExists) {
+            return res.status(400).json({ msg: 'এই ইমেইল দিয়ে ইতিমধ্যে নিবন্ধন করা হয়েছে।' });
         }
 
         const newStudent = new Student({
