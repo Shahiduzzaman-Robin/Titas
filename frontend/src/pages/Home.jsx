@@ -7,6 +7,7 @@ import TrainAnimation from '../components/TrainAnimation';
 import ContactForm from '../components/ContactForm';
 import Footer from '../components/Footer';
 import fruitFest from '../assets/hero/Fruit_Fest.jpg';
+import aboutUs from '../assets/aboutus.jpg';
 import '../styles/Home.css';
 
 const Home = () => {
@@ -206,7 +207,7 @@ const Home = () => {
                         </div>
                         <div className="about-modern-image">
                             <div className="image-frame-glass">
-                                <img src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=800&q=80" alt="Students together" />
+                                <img src={aboutUs} alt="About Titas" />
                             </div>
                         </div>
                     </div>
