@@ -782,10 +782,6 @@
         grid-template-columns: 1fr;
         gap: 3rem;
     }
-
-    .hero-modern-overlay {
-        background: linear-gradient(to right, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.85) 100%);
-    }
 }
 
 @media (max-width: 768px) {
