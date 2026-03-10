@@ -6,6 +6,8 @@ import { departmentOptions, sessionOptions, hallOptions, bloodGroupOptions, upaz
 import { API_BASE_URL } from '../constants';
 import '../styles/Register.css';
 
+const MOBILE_REGEX = /^01\d{9}$/;
+
 
 const Register = () => {
     const [formData, setFormData] = useState({
@@ -50,6 +52,18 @@ const Register = () => {
 
     const pickDuplicateRecord = (payload) => payload?.records?.regNo || payload?.records?.mobile || payload?.records?.email || null;
 
+    const getMobileValidationError = (mobileValue) => {
+        const trimmedMobile = String(mobileValue || '').trim();
+        if (!trimmedMobile) return 'মোবাইল নম্বর প্রদান করুন।';
+        if (trimmedMobile.startsWith('+88')) {
+            return 'মোবাইল নম্বর +88 ছাড়া ১১ ডিজিটে দিন (যেমন: 01XXXXXXXXX)।';
+        }
+        if (!MOBILE_REGEX.test(trimmedMobile)) {
+            return 'মোবাইল নম্বর অবশ্যই ১১ ডিজিট হতে হবে এবং 01 দিয়ে শুরু হতে হবে।';
+        }
+        return '';
+    };
+
     const handleFieldBlur = async (name) => {
         if (!['regNo', 'mobile', 'email'].includes(name)) return;
 
@@ -60,6 +74,15 @@ const Register = () => {
                 setDuplicateRecord(null);
             }
             return;
+        }
+
+        if (name === 'mobile') {
+            const mobileError = getMobileValidationError(value);
+            if (mobileError) {
+                setFieldErrors((prev) => ({ ...prev, mobile: mobileError }));
+                setDuplicateRecord(null);
+                return;
+            }
         }
 
         setFieldChecking(name, true);
@@ -88,9 +111,17 @@ const Register = () => {
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
+
+        let nextValue = value;
+        if (name === 'mobile') {
+            nextValue = String(value || '')
+                .replace(/\D/g, '')
+                .slice(0, 11);
+        }
+
         setFormData({
             ...formData,
-            [name]: type === 'checkbox' ? checked : value
+            [name]: type === 'checkbox' ? checked : nextValue
         });
 
         if (['regNo', 'mobile', 'email'].includes(name)) {
@@ -114,6 +145,14 @@ const Register = () => {
         e.preventDefault();
         setLoading(true);
         setMessage('');
+
+        const mobileError = getMobileValidationError(formData.mobile);
+        if (mobileError) {
+            setFieldErrors((prev) => ({ ...prev, mobile: mobileError }));
+            setLoading(false);
+            setMessage('দয়া করে সঠিক ১১ ডিজিটের মোবাইল নম্বর দিন (দেশকোড ছাড়া)।');
+            return;
+        }
 
         try {
             const duplicatePayload = await checkDuplicateFields({
@@ -244,7 +283,7 @@ const Register = () => {
                             <div className="row">
                                 <div className="form-group">
                                     <label className="form-label bn-text">মোবাইল নম্বর</label>
-                                    <input type="tel" name="mobile" value={formData.mobile} onChange={handleChange} onBlur={() => handleFieldBlur('mobile')} placeholder="01XXXXXXXXX" className="form-input bn-text" required />
+                                    <input type="tel" name="mobile" value={formData.mobile} onChange={handleChange} onBlur={() => handleFieldBlur('mobile')} placeholder="01XXXXXXXXX" className="form-input bn-text" required maxLength="11" inputMode="numeric" pattern="01[0-9]{9}" />
                                     {checkingField.mobile && <div className="field-feedback checking bn-text">চেক করা হচ্ছে...</div>}
                                     {fieldErrors.mobile && <div className="field-feedback error bn-text">{fieldErrors.mobile}</div>}
                                 </div>

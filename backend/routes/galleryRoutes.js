@@ -2,7 +2,8 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const path = require('path');
-const { protectAdmin } = require('../middleware/auth');
+const { protectAdmin, requireRoles } = require('../middleware/auth');
+const allowContentAdmin = requireRoles('Super Admin', 'Admin', 'Content Admin');
 const {
     getGalleryImages,
     uploadGalleryImage,
@@ -28,7 +29,7 @@ const upload = multer({
 router.get('/', getGalleryImages);
 
 // Admin Routes
-router.post('/', protectAdmin, upload.single('image'), uploadGalleryImage);
-router.delete('/:id', protectAdmin, deleteGalleryImage);
+router.post('/', protectAdmin, allowContentAdmin, upload.single('image'), uploadGalleryImage);
+router.delete('/:id', protectAdmin, allowContentAdmin, deleteGalleryImage);
 
 module.exports = router;

@@ -1,4 +1,5 @@
 const ContactMessage = require('../models/ContactMessage');
+const { logAdminAction } = require('../utils/auditLogger');
 
 // @desc    Submit a new contact message
 // @route   POST /api/contact
@@ -67,15 +68,30 @@ exports.updateMessageStatus = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Invalid status value.' });
         }
 
+        const existingMessage = await ContactMessage.findById(id);
+        if (!existingMessage) {
+            return res.status(404).json({ success: false, message: 'Message not found.' });
+        }
+
         const message = await ContactMessage.findByIdAndUpdate(
             id,
             { status },
             { new: true, runValidators: true }
         );
 
-        if (!message) {
-            return res.status(404).json({ success: false, message: 'Message not found.' });
-        }
+        await logAdminAction(req, {
+            module: 'contact',
+            action: 'update_message_status',
+            targetType: 'contact-message',
+            targetId: message._id,
+            targetLabel: message.subject || message.email,
+            description: `Updated contact message status to ${status}`,
+            details: {
+                beforeStatus: existingMessage.status,
+                afterStatus: message.status,
+                senderEmail: message.email,
+            },
+        });
 
         res.status(200).json({ success: true, data: message });
     } catch (error) {

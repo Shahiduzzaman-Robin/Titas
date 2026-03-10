@@ -26,4 +26,17 @@ const protectAdmin = async (req, res, next) => {
     }
 };
 
-module.exports = { protectAdmin };
+const requireRoles = (...roles) => {
+    const allowed = new Set(roles.map((role) => String(role || '').trim()).filter(Boolean));
+
+    return (req, res, next) => {
+        const currentRole = req?.admin?.role;
+        if (!currentRole || !allowed.has(currentRole)) {
+            return res.status(403).json({ success: false, message: 'Access denied: insufficient role permissions' });
+        }
+
+        return next();
+    };
+};
+
+module.exports = { protectAdmin, requireRoles };

@@ -1,5 +1,6 @@
 const Notice = require('../models/Notice');
 const { logAdminAction } = require('../utils/auditLogger');
+const { notifyStudentsAboutNewNotice } = require('../utils/emailNotifier');
 
 // @desc    Get all active notices (Public)
 // @route   GET /api/notices
@@ -33,9 +34,18 @@ exports.getAllNotices = async (req, res) => {
 exports.createNotice = async (req, res) => {
     console.log('--- POST /api/notices body:', req.body);
     try {
-        const { text, link, priority, isActive } = req.body;
+        const { text, link, priority, isActive, sendEmail, sendTestEmailTo } = req.body;
         if (!text) {
             return res.status(400).json({ success: false, message: 'Notice text is required' });
+        }
+
+        const sendEmailFlag = sendEmail === true || sendEmail === 'true';
+        const testRecipient = String(sendTestEmailTo || '').trim().toLowerCase();
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (sendEmailFlag) {
+            if (!testRecipient || !emailRegex.test(testRecipient)) {
+                return res.status(400).json({ success: false, message: 'A valid single test email is required.' });
+            }
         }
 
         const notice = await Notice.create({ text, link, priority, isActive });
@@ -50,9 +60,24 @@ exports.createNotice = async (req, res) => {
                 priority: notice.priority,
                 isActive: notice.isActive,
                 link: notice.link,
+                emailNotification: {
+                    requested: sendEmailFlag,
+                    mode: 'single',
+                    recipient: testRecipient || null,
+                },
             },
         });
-        res.status(201).json({ success: true, data: notice });
+
+        let notificationResult = null;
+        if (sendEmailFlag) {
+            try {
+                notificationResult = await notifyStudentsAboutNewNotice(notice, { recipientEmail: testRecipient });
+            } catch (notifyErr) {
+                console.error('New notice email notify failed:', notifyErr);
+            }
+        }
+
+        res.status(201).json({ success: true, data: notice, notification: notificationResult });
     } catch (error) {
         console.error('Error creating notice:', error);
         res.status(500).json({ success: false, message: 'Server Error' });

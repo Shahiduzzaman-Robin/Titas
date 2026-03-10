@@ -3,10 +3,22 @@ const multer = require('multer');
 const path = require('path');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const nodemailer = require('nodemailer');
 const Student = require('../models/Student');
+const {
+    sendPasswordResetOtpEmail,
+    sendPasswordResetSuccessAlert,
+    sendStudentLoginAlert,
+} = require('../utils/emailNotifier');
 
 const router = express.Router();
+const MOBILE_REGEX = /^01\d{9}$/;
+
+const getRequestIpAddress = (req) => {
+    const forwarded = req.headers['x-forwarded-for'];
+    if (Array.isArray(forwarded)) return forwarded[0];
+    if (typeof forwarded === 'string' && forwarded.length) return forwarded.split(',')[0].trim();
+    return req.ip || req.connection?.remoteAddress || '';
+};
 
 const toDuplicateRecord = (studentDoc) => {
     if (!studentDoc) return null;
@@ -106,6 +118,14 @@ router.post('/', upload.single('photo'), async (req, res) => {
             bloodGroup, hall, gender, isEmployed, organization, jobTitle, password
         } = req.body;
 
+        const trimmedMobile = String(mobile || '').trim();
+        if (trimmedMobile.startsWith('+88')) {
+            return res.status(400).json({ msg: 'মোবাইল নম্বর +88 ছাড়া ১১ ডিজিটে দিন (যেমন: 01XXXXXXXXX)।' });
+        }
+        if (!MOBILE_REGEX.test(trimmedMobile)) {
+            return res.status(400).json({ msg: 'মোবাইল নম্বর অবশ্যই ১১ ডিজিট হতে হবে এবং 01 দিয়ে শুরু হতে হবে।' });
+        }
+
         const employedFlag = isEmployed === 'true' || isEmployed === true;
 
         if (employedFlag) {
@@ -134,7 +154,7 @@ router.post('/', upload.single('photo'), async (req, res) => {
             regNo,
             nameEn,
             nameBn,
-            mobile,
+            mobile: trimmedMobile,
             email: String(email).trim().toLowerCase(),
             addressEn,
             addressBn,
@@ -246,6 +266,15 @@ router.post('/login', async (req, res) => {
             const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'titas_secret_key', {
                 expiresIn: '30d',
             });
+
+            try {
+                await sendStudentLoginAlert(user, {
+                    ipAddress: getRequestIpAddress(req),
+                    userAgent: req.get('user-agent') || '',
+                });
+            } catch (notifyErr) {
+                console.error('Student login alert email failed:', notifyErr);
+            }
 
             res.json({
                 _id: user._id,
@@ -423,35 +452,10 @@ router.post('/forgot-password', async (req, res) => {
         student.resetPasswordOTPExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
         await student.save();
 
-        // Send Email
-        const transporter = nodemailer.createTransport({
-            host: process.env.SMTP_HOST,
-            port: process.env.SMTP_PORT,
-            secure: process.env.SMTP_PORT == 465,
-            auth: {
-                user: process.env.SMTP_USER,
-                pass: process.env.SMTP_PASS,
-            },
-        });
-
-        const mailOptions = {
-            from: `"TitasDU" <${process.env.SMTP_USER}>`,
-            to: student.email,
-            subject: 'Password Reset OTP - TitasDU',
-            text: `Your OTP for password reset is: ${otp}. It will expire in 10 minutes.`,
-            html: `
-                <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
-                    <h2 style="color: #0d9488;">Password Reset OTP</h2>
-                    <p>আপনার পাসওয়ার্ড রিসেট করার ওটিপি নিচে দেওয়া হলো:</p>
-                    <div style="font-size: 24px; font-weight: bold; background: #f3f4f6; padding: 10px; display: inline-block; border-radius: 5px; letter-spacing: 5px;">
-                        ${otp}
-                    </div>
-                    <p style="margin-top: 20px; color: #666;">এই ওটিপি আগামী ১০ মিনিটের জন্য কার্যকর থাকবে।</p>
-                </div>
-            `
-        };
-
-        await transporter.sendMail(mailOptions);
+        const otpEmailResult = await sendPasswordResetOtpEmail(student, otp);
+        if (!otpEmailResult?.sent) {
+            return res.status(500).json({ msg: 'OTP পাঠাতে সমস্যা হয়েছে। পরে আবার চেষ্টা করুন।' });
+        }
         res.json({ msg: 'আপনার ইমেইলে ওটিপি পাঠানো হয়েছে।' });
 
     } catch (err) {
@@ -503,6 +507,12 @@ router.post('/reset-password', async (req, res) => {
         student.resetPasswordOTP = undefined;
         student.resetPasswordOTPExpires = undefined;
         await student.save();
+
+        try {
+            await sendPasswordResetSuccessAlert(student);
+        } catch (notifyErr) {
+            console.error('Password reset success email failed:', notifyErr);
+        }
 
         res.json({ msg: 'পাসওয়ার্ড সফলভাবে রিসেট হয়েছে। এবার লগইন করুন।' });
     } catch (err) {

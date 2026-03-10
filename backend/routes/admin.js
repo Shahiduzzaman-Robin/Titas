@@ -5,6 +5,17 @@ const Admin = require('../models/Admin');
 const AuditLog = require('../models/AuditLog');
 const Student = require('../models/Student');
 const { logAdminAction } = require('../utils/auditLogger');
+const {
+    DEFAULT_NOTIFICATION_SETTINGS,
+    getNotificationSettingsSnapshot,
+    isEmailConfigured,
+    isBulkNoticeEmailAllowed,
+    notifyStudentRegistrationStatus,
+    notifyProfileEditDecision,
+    saveNotificationSettings,
+    sendNotificationTestEmail,
+} = require('../utils/emailNotifier');
+const { sendUpcomingEventReminders } = require('../utils/eventReminderService');
 
 const router = express.Router();
 
@@ -18,6 +29,9 @@ const protectAdmin = async (req, res, next) => {
             req.admin = await Admin.findById(decoded.id).select('-password');
             if (!req.admin) {
                 return res.status(401).json({ msg: 'Not authorized as an admin' });
+            }
+            if (req.admin.role === 'Content Admin') {
+                return res.status(403).json({ msg: 'Access denied for Content Admin on this module' });
             }
             next();
         } catch (error) {
@@ -143,6 +157,135 @@ router.get('/audit-logs', protectAdmin, async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).json({ msg: 'Server Error' });
+    }
+});
+
+// @route   GET /api/admin/email/status
+// @desc    Get email notification system status
+// @access  Private Admin
+router.get('/email/status', protectAdmin, async (req, res) => {
+    const reminderEnabled = String(process.env.EVENT_REMINDER_JOB_ENABLED || 'true').toLowerCase() !== 'false';
+    const settingsSnapshot = await getNotificationSettingsSnapshot();
+    return res.json({
+        success: true,
+        emailConfigured: isEmailConfigured(),
+        allowBulkNoticeEmail: isBulkNoticeEmailAllowed(),
+        settings: settingsSnapshot.settings,
+        settingsUpdatedBy: settingsSnapshot.updatedBy,
+        settingsUpdatedAt: settingsSnapshot.updatedAt,
+        reminderJob: {
+            enabled: reminderEnabled,
+            intervalHours: Number(process.env.EVENT_REMINDER_JOB_INTERVAL_HOURS || 6),
+            daysAhead: Number(process.env.EVENT_REMINDER_DAYS_AHEAD || 1),
+        },
+    });
+});
+
+// @route   PUT /api/admin/email/settings
+// @desc    Persist email notification settings
+// @access  Private Admin
+router.put('/email/settings', protectAdmin, async (req, res) => {
+    try {
+        const nextSettings = req.body?.settings || {};
+        const mergedSettings = { ...DEFAULT_NOTIFICATION_SETTINGS, ...nextSettings };
+        const saved = await saveNotificationSettings(mergedSettings, req.admin?.username || '');
+
+        await logAdminAction(req, {
+            module: 'notifications',
+            action: 'update_settings',
+            targetType: 'notification-settings',
+            targetId: 'default',
+            targetLabel: 'Email notification settings',
+            description: `Admin ${req.admin.username} updated email notification settings`,
+            details: {
+                settings: saved.settings,
+            },
+        });
+
+        return res.json({
+            success: true,
+            msg: 'Email notification settings saved successfully',
+            settings: saved.settings,
+            updatedAt: saved.updatedAt,
+            updatedBy: saved.updatedBy,
+        });
+    } catch (error) {
+        console.error('Email settings save failed:', error);
+        return res.status(500).json({ success: false, msg: 'Failed to save notification settings' });
+    }
+});
+
+// @route   POST /api/admin/email/test
+// @desc    Send a test email for a notification template
+// @access  Private Admin
+router.post('/email/test', protectAdmin, async (req, res) => {
+    try {
+        const to = String(req.body?.to || '').trim().toLowerCase();
+        const type = String(req.body?.type || '').trim();
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        if (!emailRegex.test(to)) {
+            return res.status(400).json({ success: false, msg: 'A valid email address is required.' });
+        }
+
+        if (!Object.prototype.hasOwnProperty.call(DEFAULT_NOTIFICATION_SETTINGS, type)) {
+            return res.status(400).json({ success: false, msg: 'Unknown notification template type.' });
+        }
+
+        const result = await sendNotificationTestEmail(type, to);
+        if (!result?.sent) {
+            const reason = result?.reason === 'smtp-not-configured'
+                ? 'SMTP is not configured.'
+                : 'Failed to send test email.';
+            return res.status(400).json({ success: false, msg: reason });
+        }
+
+        await logAdminAction(req, {
+            module: 'notifications',
+            action: 'send_test_email',
+            targetType: 'notification-template',
+            targetId: type,
+            targetLabel: type,
+            description: `Admin ${req.admin.username} sent a notification test email`,
+            details: {
+                type,
+                recipient: to,
+            },
+        });
+
+        return res.json({ success: true, msg: 'Test email sent successfully.' });
+    } catch (error) {
+        console.error('Test email send failed:', error);
+        return res.status(500).json({ success: false, msg: 'Failed to send test email.' });
+    }
+});
+
+// @route   POST /api/admin/events/reminders/send
+// @desc    Send reminder emails for upcoming events to approved students
+// @access  Private Admin
+router.post('/events/reminders/send', protectAdmin, async (req, res) => {
+    try {
+        const daysAhead = Math.max(1, Math.min(14, Number(req.body?.daysAhead || req.query?.daysAhead || 1)));
+        const stats = await sendUpcomingEventReminders({ daysAhead });
+
+        await logAdminAction(req, {
+            module: 'notifications',
+            action: 'send_event_reminders',
+            targetType: 'event-reminder-job',
+            targetId: 'manual',
+            targetLabel: 'Manual event reminder run',
+            description: `Admin ${req.admin.username} triggered manual event reminders`,
+            details: {
+                daysAhead,
+                remindedEvents: stats?.remindedEvents || 0,
+                recipientsNotified: stats?.recipientsNotified || 0,
+            },
+        });
+
+        return res.json({ success: true, ...stats });
+    } catch (error) {
+        console.error('Manual event reminder failed:', error);
+        return res.status(500).json({ success: false, msg: 'Failed to send event reminders' });
     }
 });
 
@@ -319,6 +462,20 @@ router.get('/students/export/approved', protectAdmin, async (req, res) => {
         };
 
         const filename = `titas-approved-students-${generatedAt.toISOString().slice(0, 10)}.xlsx`;
+
+        await logAdminAction(req, {
+            module: 'students',
+            action: 'export_approved_students',
+            targetType: 'student-export',
+            targetId: 'approved',
+            targetLabel: 'Approved student export',
+            description: `Admin ${req.admin.username} exported approved students`,
+            details: {
+                count: approvedStudents.length,
+                filename,
+            },
+        });
+
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
 
@@ -603,6 +760,12 @@ router.put('/students/:id/status', protectAdmin, async (req, res) => {
             },
         });
 
+        try {
+            await notifyStudentRegistrationStatus(updatedStudent, status);
+        } catch (notifyErr) {
+            console.error('Registration status email notify failed:', notifyErr);
+        }
+
         res.json(updatedStudent);
     } catch (err) {
         console.error(err);
@@ -719,6 +882,12 @@ router.put('/edits/:id/approve', protectAdmin, async (req, res) => {
             },
         });
 
+        try {
+            await notifyProfileEditDecision(student, 'Approved');
+        } catch (notifyErr) {
+            console.error('Profile edit approval email notify failed:', notifyErr);
+        }
+
         res.json({ msg: 'Edit approved and applied', edit });
     } catch (err) {
         console.error(err);
@@ -731,7 +900,7 @@ router.put('/edits/:id/approve', protectAdmin, async (req, res) => {
 // @access  Private Admin
 router.put('/edits/:id/reject', protectAdmin, async (req, res) => {
     try {
-        const edit = await ProfileEdit.findById(req.params.id);
+        const edit = await ProfileEdit.findById(req.params.id).populate('student');
         if (!edit) return res.status(404).json({ msg: 'Edit request not found' });
         if (edit.status !== 'Pending') return res.status(400).json({ msg: 'Edit already reviewed' });
 
@@ -745,13 +914,21 @@ router.put('/edits/:id/reject', protectAdmin, async (req, res) => {
             action: 'reject_profile_edit',
             targetType: 'profile-edit',
             targetId: edit._id,
-            targetLabel: String(edit.student || ''),
+            targetLabel: edit?.student?.nameEn || edit?.student?.nameBn || String(edit.student || ''),
             description: `Rejected profile edit request ${edit._id}`,
             details: {
-                studentId: edit.student,
+                studentId: edit?.student?._id || edit.student,
                 changes: Object.fromEntries(edit.changes || []),
             },
         });
+
+        try {
+            if (edit.student) {
+                await notifyProfileEditDecision(edit.student, 'Rejected');
+            }
+        } catch (notifyErr) {
+            console.error('Profile edit rejection email notify failed:', notifyErr);
+        }
 
         res.json({ msg: 'Edit rejected', edit });
     } catch (err) {

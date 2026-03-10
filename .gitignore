@@ -18,6 +18,11 @@ backend/mongodb-macos-x86_64-7.0.5.tgz
 .env.development.local
 .env.test.local
 .env.production.local
+backend/.env
+backend/.env.*
+!backend/.env.example
+frontend/.env
+frontend/.env.*
 
 # Logs
 npm-debug.log*

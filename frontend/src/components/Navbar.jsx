@@ -16,6 +16,8 @@ const Navbar = () => {
     const user = userStr ? JSON.parse(userStr) : null;
     const adminUserStr = localStorage.getItem('admin_user');
     const adminUser = adminUserStr ? JSON.parse(adminUserStr) : null;
+    const adminRole = adminUser?.role || 'Admin';
+    const adminLandingPath = adminRole === 'Content Admin' ? '/admin/blog' : '/admin/dashboard';
     const adminToken = localStorage.getItem('admin_token');
     const isAdminAuthenticated = Boolean(adminToken);
 
@@ -118,7 +120,7 @@ const Navbar = () => {
                                         </div>
                                         <ul className="dropdown-list">
                                             <li>
-                                                <Link to="/admin/dashboard" onClick={() => setIsDropdownOpen(false)}>
+                                                <Link to={adminLandingPath} onClick={() => setIsDropdownOpen(false)}>
                                                     <User size={16} />
                                                     <span>Admin Dashboard</span>
                                                 </Link>

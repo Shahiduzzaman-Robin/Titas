@@ -1,6 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
-import { Globe, User, LogOut, ChevronDown } from 'lucide-react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
 // Pages placeholders
 import Home from './pages/Home';
@@ -21,8 +19,34 @@ import AdminNotices from './pages/AdminNotices';
 import AdminGallery from './pages/AdminGallery';
 import AdminEvents from './pages/AdminEvents';
 import AdminAuditLogs from './pages/AdminAuditLogs';
+import AdminNotifications from './pages/AdminNotifications';
 import Contact from './pages/Contact';
 import Navbar from './components/Navbar';
+
+const getAdminRole = () => {
+    try {
+        const adminUser = JSON.parse(localStorage.getItem('admin_user') || '{}');
+        return adminUser?.role || 'Admin';
+    } catch (error) {
+        return 'Admin';
+    }
+};
+
+const RequireAdminAuth = ({ children, allowedRoles = null, fallback = '/admin/blog' }) => {
+    const token = localStorage.getItem('admin_token');
+    if (!token) {
+        return <Navigate to="/login" replace />;
+    }
+
+    if (Array.isArray(allowedRoles) && allowedRoles.length > 0) {
+        const role = getAdminRole();
+        if (!allowedRoles.includes(role)) {
+            return <Navigate to={fallback} replace />;
+        }
+    }
+
+    return children;
+};
 
 function App() {
     return (
@@ -40,16 +64,61 @@ function App() {
                         <Route path="/login" element={<Login />} />
                         <Route path="/forgot-password" element={<ForgotPassword />} />
                         <Route path="/profile" element={<Profile />} />
-                        <Route path="/admin/dashboard" element={<AdminDashboard />} />
-                        <Route path="/admin/students" element={<AdminStudents />} />
-                        <Route path="/admin/students/:id" element={<AdminStudentDetail />} />
-                        <Route path="/admin/edits" element={<AdminEdits />} />
-                        <Route path="/admin/blog" element={<AdminBlog />} />
-                        <Route path="/admin/messages" element={<AdminMessages />} />
-                        <Route path="/admin/notices" element={<AdminNotices />} />
-                        <Route path="/admin/gallery" element={<AdminGallery />} />
-                        <Route path="/admin/events" element={<AdminEvents />} />
-                        <Route path="/admin/audit-logs" element={<AdminAuditLogs />} />
+                        <Route path="/admin/dashboard" element={
+                            <RequireAdminAuth allowedRoles={['Super Admin', 'Admin']}>
+                                <AdminDashboard />
+                            </RequireAdminAuth>
+                        } />
+                        <Route path="/admin/students" element={
+                            <RequireAdminAuth allowedRoles={['Super Admin', 'Admin']}>
+                                <AdminStudents />
+                            </RequireAdminAuth>
+                        } />
+                        <Route path="/admin/students/:id" element={
+                            <RequireAdminAuth allowedRoles={['Super Admin', 'Admin']}>
+                                <AdminStudentDetail />
+                            </RequireAdminAuth>
+                        } />
+                        <Route path="/admin/edits" element={
+                            <RequireAdminAuth allowedRoles={['Super Admin', 'Admin']}>
+                                <AdminEdits />
+                            </RequireAdminAuth>
+                        } />
+                        <Route path="/admin/blog" element={
+                            <RequireAdminAuth allowedRoles={['Super Admin', 'Admin', 'Content Admin']}>
+                                <AdminBlog />
+                            </RequireAdminAuth>
+                        } />
+                        <Route path="/admin/messages" element={
+                            <RequireAdminAuth allowedRoles={['Super Admin', 'Admin']}>
+                                <AdminMessages />
+                            </RequireAdminAuth>
+                        } />
+                        <Route path="/admin/notices" element={
+                            <RequireAdminAuth allowedRoles={['Super Admin', 'Admin', 'Content Admin']}>
+                                <AdminNotices />
+                            </RequireAdminAuth>
+                        } />
+                        <Route path="/admin/gallery" element={
+                            <RequireAdminAuth allowedRoles={['Super Admin', 'Admin', 'Content Admin']}>
+                                <AdminGallery />
+                            </RequireAdminAuth>
+                        } />
+                        <Route path="/admin/events" element={
+                            <RequireAdminAuth allowedRoles={['Super Admin', 'Admin', 'Content Admin']}>
+                                <AdminEvents />
+                            </RequireAdminAuth>
+                        } />
+                        <Route path="/admin/notifications" element={
+                            <RequireAdminAuth allowedRoles={['Super Admin', 'Admin']}>
+                                <AdminNotifications />
+                            </RequireAdminAuth>
+                        } />
+                        <Route path="/admin/audit-logs" element={
+                            <RequireAdminAuth allowedRoles={['Super Admin', 'Admin']}>
+                                <AdminAuditLogs />
+                            </RequireAdminAuth>
+                        } />
                     </Routes>
                 </main>
             </div>

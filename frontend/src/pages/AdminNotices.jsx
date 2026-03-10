@@ -17,7 +17,9 @@ const AdminNotices = () => {
         text: '',
         link: '',
         priority: 'normal',
-        isActive: true
+        isActive: true,
+        sendEmail: false,
+        testEmail: ''
     });
 
     const fetchNotices = async () => {
@@ -50,7 +52,7 @@ const AdminNotices = () => {
     };
 
     const openAddModal = () => {
-        setFormData({ text: '', link: '', priority: 'normal', isActive: true });
+        setFormData({ text: '', link: '', priority: 'normal', isActive: true, sendEmail: false, testEmail: '' });
         setEditMode(false);
         setCurrentId(null);
         setShowModal(true);
@@ -61,7 +63,9 @@ const AdminNotices = () => {
             text: notice.text,
             link: notice.link || '',
             priority: notice.priority,
-            isActive: notice.isActive
+            isActive: notice.isActive,
+            sendEmail: false,
+            testEmail: ''
         });
         setEditMode(true);
         setCurrentId(notice._id);
@@ -77,7 +81,29 @@ const AdminNotices = () => {
             if (editMode) {
                 await axios.put(`${API_BASE_URL}/api/notices/${currentId}`, formData, config);
             } else {
-                await axios.post(`${API_BASE_URL}/api/notices`, formData, config);
+                if (formData.sendEmail && !formData.testEmail.trim()) {
+                    alert('Please provide one valid test student email before sending notice email.');
+                    return;
+                }
+
+                const payload = {
+                    text: formData.text,
+                    link: formData.link,
+                    priority: formData.priority,
+                    isActive: formData.isActive,
+                    sendEmail: formData.sendEmail,
+                    sendTestEmailTo: formData.sendEmail ? formData.testEmail.trim() : '',
+                };
+
+                const res = await axios.post(`${API_BASE_URL}/api/notices`, payload, config);
+                const sent = res?.data?.notification?.sentCount;
+                const total = res?.data?.notification?.total;
+                const mode = res?.data?.notification?.mode;
+                const recipient = res?.data?.notification?.recipient;
+
+                if (formData.sendEmail) {
+                    alert(`Notice saved. Test email sent: ${sent || 0}/1 to ${recipient || formData.testEmail}`);
+                }
             }
             fetchNotices();
             setShowModal(false);
@@ -247,6 +273,38 @@ const AdminNotices = () => {
                                     </label>
                                 </div>
                             </div>
+
+                            {!editMode && (
+                                <div className="notice-email-options">
+                                    <label className="checkbox-label" style={{ marginBottom: '0.45rem' }}>
+                                        <input
+                                            type="checkbox"
+                                            name="sendEmail"
+                                            checked={formData.sendEmail}
+                                            onChange={handleInputChange}
+                                        />
+                                        <span className="bn-text font-bold">এই নোটিশের ইমেইল পাঠাবো</span>
+                                    </label>
+
+                                    {formData.sendEmail && (
+                                        <div className="form-group" style={{ marginTop: '0.75rem' }}>
+                                            <label className="en-text">Test Student Email *</label>
+                                            <input
+                                                type="email"
+                                                name="testEmail"
+                                                required={formData.sendEmail}
+                                                className="modal-input en-text"
+                                                value={formData.testEmail}
+                                                onChange={handleInputChange}
+                                                placeholder="student@example.com"
+                                            />
+                                            <small className="en-text" style={{ color: '#64748b' }}>
+                                                Safety mode: notice email can now be sent to one test email only.
+                                            </small>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
 
                             <div className="modal-actions">
                                 <button type="button" className="btn-modern-secondary" onClick={() => setShowModal(false)}>Cancel</button>

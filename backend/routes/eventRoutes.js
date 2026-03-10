@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const { protectAdmin } = require('../middleware/auth');
+const { protectAdmin, requireRoles } = require('../middleware/auth');
+const allowContentAdmin = requireRoles('Super Admin', 'Admin', 'Content Admin');
 const {
     getEvents,
     getAllEvents,
@@ -13,9 +14,9 @@ const {
 router.get('/', getEvents);
 
 // Admin Routes
-router.get('/all', protectAdmin, getAllEvents);
-router.post('/', protectAdmin, createEvent);
-router.put('/:id', protectAdmin, updateEvent);
-router.delete('/:id', protectAdmin, deleteEvent);
+router.get('/all', protectAdmin, allowContentAdmin, getAllEvents);
+router.post('/', protectAdmin, allowContentAdmin, createEvent);
+router.put('/:id', protectAdmin, allowContentAdmin, updateEvent);
+router.delete('/:id', protectAdmin, allowContentAdmin, deleteEvent);
 
 module.exports = router;

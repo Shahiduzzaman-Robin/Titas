@@ -18,6 +18,10 @@ const eventSchema = new mongoose.Schema({
     },
     link: {
         type: String
+    },
+    lastReminderSentOn: {
+        type: String,
+        default: ''
     }
 }, { timestamps: true });
 

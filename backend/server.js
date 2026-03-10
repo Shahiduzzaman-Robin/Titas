@@ -11,6 +11,7 @@ const noticeRoutes = require('./routes/noticeRoutes');
 const galleryRoutes = require('./routes/galleryRoutes');
 const eventRoutes = require('./routes/eventRoutes');
 const BlogPost = require('./models/BlogPost');
+const { sendUpcomingEventReminders } = require('./utils/eventReminderService');
 
 const app = express();
 
@@ -112,4 +113,29 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 5010;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
+
+    const reminderEnabled = String(process.env.EVENT_REMINDER_JOB_ENABLED || 'true').toLowerCase() !== 'false';
+    if (reminderEnabled) {
+        const intervalHours = Number(process.env.EVENT_REMINDER_JOB_INTERVAL_HOURS || 6);
+        const daysAhead = Number(process.env.EVENT_REMINDER_DAYS_AHEAD || 1);
+        const intervalMs = Math.max(1, intervalHours) * 60 * 60 * 1000;
+
+        setTimeout(async () => {
+            try {
+                const stats = await sendUpcomingEventReminders({ daysAhead });
+                console.log('Initial event reminder job completed:', stats);
+            } catch (error) {
+                console.error('Initial event reminder job failed:', error.message);
+            }
+        }, 15000);
+
+        setInterval(async () => {
+            try {
+                const stats = await sendUpcomingEventReminders({ daysAhead });
+                console.log('Scheduled event reminder job completed:', stats);
+            } catch (error) {
+                console.error('Scheduled event reminder job failed:', error.message);
+            }
+        }, intervalMs);
+    }
 });

@@ -68,7 +68,8 @@ const seedDefaultCategories = async () => {
 
 seedDefaultCategories().catch((err) => console.error('Category seed error:', err.message));
 
-const { protectAdmin } = require('../middleware/auth');
+const { protectAdmin, requireRoles } = require('../middleware/auth');
+const allowContentAdmin = requireRoles('Super Admin', 'Admin', 'Content Admin');
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, 'uploads/'),
@@ -226,7 +227,7 @@ router.post('/posts/:slug/view', async (req, res) => {
     }
 });
 
-router.get('/admin/posts', protectAdmin, async (req, res) => {
+router.get('/admin/posts', protectAdmin, allowContentAdmin, async (req, res) => {
     try {
         const { status = '' } = req.query;
         const query = {};
@@ -243,7 +244,7 @@ router.get('/admin/posts', protectAdmin, async (req, res) => {
     }
 });
 
-router.get('/admin/posts/:id', protectAdmin, async (req, res) => {
+router.get('/admin/posts/:id', protectAdmin, allowContentAdmin, async (req, res) => {
     try {
         const post = await BlogPost.findById(req.params.id)
             .populate('category', 'name slug')
@@ -259,7 +260,7 @@ router.get('/admin/posts/:id', protectAdmin, async (req, res) => {
     }
 });
 
-router.post('/admin/uploads/inline-images', protectAdmin, upload.array('images', 10), async (req, res) => {
+router.post('/admin/uploads/inline-images', protectAdmin, allowContentAdmin, upload.array('images', 10), async (req, res) => {
     try {
         const files = req.files || [];
         if (!files.length) {
@@ -278,7 +279,7 @@ router.post('/admin/uploads/inline-images', protectAdmin, upload.array('images',
     }
 });
 
-router.post('/admin/posts', protectAdmin, upload.single('featuredImage'), async (req, res) => {
+router.post('/admin/posts', protectAdmin, allowContentAdmin, upload.single('featuredImage'), async (req, res) => {
     try {
         const { title, content, excerpt, author, category, status = 'draft' } = req.body;
         const tagIds = parseTags(req.body.tags);
@@ -328,7 +329,7 @@ router.post('/admin/posts', protectAdmin, upload.single('featuredImage'), async 
     }
 });
 
-router.put('/admin/posts/:id', protectAdmin, upload.single('featuredImage'), async (req, res) => {
+router.put('/admin/posts/:id', protectAdmin, allowContentAdmin, upload.single('featuredImage'), async (req, res) => {
     try {
         const post = await BlogPost.findById(req.params.id);
         if (!post) return res.status(404).json({ msg: 'Post not found' });
@@ -410,7 +411,7 @@ router.put('/admin/posts/:id', protectAdmin, upload.single('featuredImage'), asy
     }
 });
 
-router.delete('/admin/posts/:id', protectAdmin, async (req, res) => {
+router.delete('/admin/posts/:id', protectAdmin, allowContentAdmin, async (req, res) => {
     try {
         const post = await BlogPost.findById(req.params.id);
         if (!post) return res.status(404).json({ msg: 'Post not found' });
@@ -440,7 +441,7 @@ router.delete('/admin/posts/:id', protectAdmin, async (req, res) => {
     }
 });
 
-router.get('/admin/categories', protectAdmin, async (req, res) => {
+router.get('/admin/categories', protectAdmin, allowContentAdmin, async (req, res) => {
     try {
         const categories = await BlogCategory.find().sort({ name: 1 });
         res.json(categories);
@@ -449,23 +450,43 @@ router.get('/admin/categories', protectAdmin, async (req, res) => {
     }
 });
 
-router.post('/admin/categories', protectAdmin, async (req, res) => {
+router.post('/admin/categories', protectAdmin, allowContentAdmin, async (req, res) => {
     try {
         const { name, description = '' } = req.body;
         if (!name) return res.status(400).json({ msg: 'Category name is required' });
 
         const slug = await generateUniqueSlug(BlogCategory, name);
         const category = await BlogCategory.create({ name, slug, description });
+
+        await logAdminAction(req, {
+            module: 'blog',
+            action: 'create_category',
+            targetType: 'blog-category',
+            targetId: category._id,
+            targetLabel: category.name,
+            description: `Created blog category "${category.name}"`,
+            details: {
+                slug: category.slug,
+                description: category.description || '',
+            },
+        });
+
         res.status(201).json(category);
     } catch (error) {
         res.status(500).json({ msg: error.message || 'Server Error' });
     }
 });
 
-router.put('/admin/categories/:id', protectAdmin, async (req, res) => {
+router.put('/admin/categories/:id', protectAdmin, allowContentAdmin, async (req, res) => {
     try {
         const category = await BlogCategory.findById(req.params.id);
         if (!category) return res.status(404).json({ msg: 'Category not found' });
+
+        const before = {
+            name: category.name,
+            slug: category.slug,
+            description: category.description || '',
+        };
 
         const { name, description } = req.body;
         if (name && name !== category.name) {
@@ -475,27 +496,59 @@ router.put('/admin/categories/:id', protectAdmin, async (req, res) => {
         if (description !== undefined) category.description = description;
 
         await category.save();
+
+        await logAdminAction(req, {
+            module: 'blog',
+            action: 'update_category',
+            targetType: 'blog-category',
+            targetId: category._id,
+            targetLabel: category.name,
+            description: `Updated blog category "${category.name}"`,
+            details: {
+                before,
+                after: {
+                    name: category.name,
+                    slug: category.slug,
+                    description: category.description || '',
+                },
+            },
+        });
+
         res.json(category);
     } catch (error) {
         res.status(500).json({ msg: error.message || 'Server Error' });
     }
 });
 
-router.delete('/admin/categories/:id', protectAdmin, async (req, res) => {
+router.delete('/admin/categories/:id', protectAdmin, allowContentAdmin, async (req, res) => {
     try {
         const inUse = await BlogPost.countDocuments({ category: req.params.id });
         if (inUse > 0) {
             return res.status(400).json({ msg: 'Cannot delete category used by posts' });
         }
 
+        const category = await BlogCategory.findById(req.params.id);
         await BlogCategory.findByIdAndDelete(req.params.id);
+
+        await logAdminAction(req, {
+            module: 'blog',
+            action: 'delete_category',
+            targetType: 'blog-category',
+            targetId: req.params.id,
+            targetLabel: category?.name || req.params.id,
+            description: `Deleted blog category "${category?.name || req.params.id}"`,
+            details: {
+                slug: category?.slug || '',
+            },
+        });
+
         res.json({ msg: 'Category deleted successfully' });
     } catch (error) {
         res.status(500).json({ msg: 'Server Error' });
     }
 });
 
-router.get('/admin/tags', protectAdmin, async (req, res) => {
+router.get('/admin/tags', protectAdmin, allowContentAdmin, async (req, res) => {
     try {
         const tags = await BlogTag.find().sort({ name: 1 });
         res.json(tags);
@@ -504,23 +557,41 @@ router.get('/admin/tags', protectAdmin, async (req, res) => {
     }
 });
 
-router.post('/admin/tags', protectAdmin, async (req, res) => {
+router.post('/admin/tags', protectAdmin, allowContentAdmin, async (req, res) => {
     try {
         const { name } = req.body;
         if (!name) return res.status(400).json({ msg: 'Tag name is required' });
 
         const slug = await generateUniqueSlug(BlogTag, name);
         const tag = await BlogTag.create({ name, slug });
+
+        await logAdminAction(req, {
+            module: 'blog',
+            action: 'create_tag',
+            targetType: 'blog-tag',
+            targetId: tag._id,
+            targetLabel: tag.name,
+            description: `Created blog tag "${tag.name}"`,
+            details: {
+                slug: tag.slug,
+            },
+        });
+
         res.status(201).json(tag);
     } catch (error) {
         res.status(500).json({ msg: error.message || 'Server Error' });
     }
 });
 
-router.put('/admin/tags/:id', protectAdmin, async (req, res) => {
+router.put('/admin/tags/:id', protectAdmin, allowContentAdmin, async (req, res) => {
     try {
         const tag = await BlogTag.findById(req.params.id);
         if (!tag) return res.status(404).json({ msg: 'Tag not found' });
+
+        const before = {
+            name: tag.name,
+            slug: tag.slug,
+        };
 
         const { name } = req.body;
         if (name && name !== tag.name) {
@@ -529,16 +600,47 @@ router.put('/admin/tags/:id', protectAdmin, async (req, res) => {
         }
 
         await tag.save();
+
+        await logAdminAction(req, {
+            module: 'blog',
+            action: 'update_tag',
+            targetType: 'blog-tag',
+            targetId: tag._id,
+            targetLabel: tag.name,
+            description: `Updated blog tag "${tag.name}"`,
+            details: {
+                before,
+                after: {
+                    name: tag.name,
+                    slug: tag.slug,
+                },
+            },
+        });
+
         res.json(tag);
     } catch (error) {
         res.status(500).json({ msg: error.message || 'Server Error' });
     }
 });
 
-router.delete('/admin/tags/:id', protectAdmin, async (req, res) => {
+router.delete('/admin/tags/:id', protectAdmin, allowContentAdmin, async (req, res) => {
     try {
+        const tag = await BlogTag.findById(req.params.id);
         await BlogPost.updateMany({}, { $pull: { tags: req.params.id } });
         await BlogTag.findByIdAndDelete(req.params.id);
+
+        await logAdminAction(req, {
+            module: 'blog',
+            action: 'delete_tag',
+            targetType: 'blog-tag',
+            targetId: req.params.id,
+            targetLabel: tag?.name || req.params.id,
+            description: `Deleted blog tag "${tag?.name || req.params.id}"`,
+            details: {
+                slug: tag?.slug || '',
+            },
+        });
+
         res.json({ msg: 'Tag deleted successfully' });
     } catch (error) {
         res.status(500).json({ msg: 'Server Error' });
