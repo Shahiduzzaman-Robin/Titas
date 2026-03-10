@@ -134,8 +134,39 @@
 }
 
 @media (max-width: 768px) {
+    .footer-top {
+        grid-template-columns: 1fr;
+        text-align: center;
+        gap: 3rem;
+    }
+
+    .footer-brand {
+        align-items: center;
+    }
+
+    .footer-desc {
+        max-width: 100%;
+    }
+
+    .footer-socials {
+        justify-content: center;
+    }
+
+    .footer-links a,
+    .footer-contact li {
+        justify-content: center;
+        text-align: center;
+    }
+
+    .footer-contact li {
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
     .footer-bottom {
         flex-direction: column;
         text-align: center;
+        gap: 1.5rem;
     }
 }
