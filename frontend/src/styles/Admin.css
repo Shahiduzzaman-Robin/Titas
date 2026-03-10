@@ -250,6 +250,33 @@
     gap: 0.5rem;
 }
 
+.audit-log-table td,
+.audit-log-table th {
+    vertical-align: top;
+}
+
+.audit-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: capitalize;
+    white-space: nowrap;
+}
+
+.audit-chip.primary {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.audit-chip.neutral {
+    background: #e2e8f0;
+    color: #334155;
+}
+
 /* Gender chart */
 .gender-stats {
     display: flex;

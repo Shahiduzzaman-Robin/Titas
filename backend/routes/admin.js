@@ -1,7 +1,10 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
+const ExcelJS = require('exceljs');
 const Admin = require('../models/Admin');
+const AuditLog = require('../models/AuditLog');
 const Student = require('../models/Student');
+const { logAdminAction } = require('../utils/auditLogger');
 
 const router = express.Router();
 
@@ -41,6 +44,20 @@ router.post('/login', async (req, res) => {
                 expiresIn: '30d',
             });
 
+            await logAdminAction(req, {
+                admin: adminUser._id,
+                adminUsername: adminUser.username,
+                module: 'auth',
+                action: 'login',
+                targetType: 'admin-session',
+                targetId: adminUser._id,
+                targetLabel: adminUser.username,
+                description: `Admin ${adminUser.username} logged in`,
+                details: {
+                    role: adminUser.role,
+                },
+            });
+
             res.json({
                 _id: adminUser._id,
                 username: adminUser.username,
@@ -53,6 +70,79 @@ router.post('/login', async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).send('Server Error');
+    }
+});
+
+// @route   POST /api/admin/logout
+// @desc    Log admin logout event
+// @access  Private Admin
+router.post('/logout', protectAdmin, async (req, res) => {
+    try {
+        await logAdminAction(req, {
+            module: 'auth',
+            action: 'logout',
+            targetType: 'admin-session',
+            targetId: req.admin._id,
+            targetLabel: req.admin.username,
+            description: `Admin ${req.admin.username} logged out`,
+            details: {
+                role: req.admin.role,
+            },
+        });
+
+        return res.json({ success: true, msg: 'Logout logged successfully' });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ msg: 'Server Error' });
+    }
+});
+
+// @route   GET /api/admin/audit-logs
+// @desc    List audit logs for admin actions
+// @access  Private Admin
+router.get('/audit-logs', protectAdmin, async (req, res) => {
+    try {
+        const {
+            page = 1,
+            limit = 50,
+            module = '',
+            action = '',
+            adminUsername = '',
+            search = '',
+        } = req.query;
+
+        const query = {};
+        if (module) query.module = module;
+        if (action) query.action = action;
+        if (adminUsername) query.adminUsername = adminUsername;
+        if (search) {
+            query.$or = [
+                { targetLabel: { $regex: search, $options: 'i' } },
+                { description: { $regex: search, $options: 'i' } },
+                { adminUsername: { $regex: search, $options: 'i' } },
+            ];
+        }
+
+        const pageNumber = Math.max(1, parseInt(page, 10) || 1);
+        const limitNumber = Math.min(200, Math.max(1, parseInt(limit, 10) || 50));
+        const total = await AuditLog.countDocuments(query);
+        const logs = await AuditLog.find(query)
+            .sort({ createdAt: -1 })
+            .skip((pageNumber - 1) * limitNumber)
+            .limit(limitNumber);
+
+        res.json({
+            logs,
+            pagination: {
+                page: pageNumber,
+                limit: limitNumber,
+                total,
+                hasMore: pageNumber * limitNumber < total,
+            },
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ msg: 'Server Error' });
     }
 });
 
@@ -98,6 +188,148 @@ router.get('/students/:id', protectAdmin, async (req, res) => {
     }
 });
 
+// @route   GET /api/admin/students/export/approved
+// @desc    Export all approved students to a formatted Excel file
+// @access  Private Admin
+router.get('/students/export/approved', protectAdmin, async (req, res) => {
+    try {
+        const approvedStudents = await Student.find({ status: 'Approved' }).sort({ session: -1, department: 1, nameEn: 1 });
+
+        const workbook = new ExcelJS.Workbook();
+        workbook.creator = 'Titas Admin Panel';
+        workbook.company = 'Titas DU';
+        workbook.created = new Date();
+        workbook.modified = new Date();
+
+        const worksheet = workbook.addWorksheet('Approved Students', {
+            views: [{ state: 'frozen', ySplit: 5 }],
+        });
+
+        const totalColumns = 20;
+        const generatedAt = new Date();
+
+        worksheet.mergeCells(1, 1, 1, totalColumns);
+        worksheet.getCell('A1').value = 'Titas DU Approved Students Directory';
+        worksheet.getCell('A1').font = { size: 18, bold: true, color: { argb: 'FF1F3A5F' } };
+        worksheet.getCell('A1').alignment = { vertical: 'middle', horizontal: 'center' };
+        worksheet.getRow(1).height = 28;
+
+        worksheet.mergeCells(2, 1, 2, totalColumns);
+        worksheet.getCell('A2').value = 'Dhaka University students from Brahmanbaria - approved member export';
+        worksheet.getCell('A2').font = { size: 11, color: { argb: 'FF64748B' }, italic: true };
+        worksheet.getCell('A2').alignment = { vertical: 'middle', horizontal: 'center' };
+
+        worksheet.mergeCells(3, 1, 3, totalColumns);
+        worksheet.getCell('A3').value = `Generated: ${generatedAt.toLocaleString('en-GB')} | Total Approved Students: ${approvedStudents.length}`;
+        worksheet.getCell('A3').font = { size: 10, color: { argb: 'FF475569' } };
+        worksheet.getCell('A3').alignment = { vertical: 'middle', horizontal: 'center' };
+
+        worksheet.getRow(4).height = 10;
+
+        const columns = [
+            { header: 'Titas ID', key: 'titasId', width: 16 },
+            { header: 'Name (Bangla)', key: 'nameBn', width: 24 },
+            { header: 'Name (English)', key: 'nameEn', width: 26 },
+            { header: 'Session', key: 'session', width: 14 },
+            { header: 'Registration No', key: 'regNo', width: 18 },
+            { header: 'Department', key: 'department', width: 30 },
+            { header: 'Hall', key: 'hall', width: 26 },
+            { header: 'Mobile', key: 'mobile', width: 16 },
+            { header: 'Email', key: 'email', width: 28 },
+            { header: 'Upazila', key: 'upazila', width: 16 },
+            { header: 'Blood Group', key: 'bloodGroup', width: 14 },
+            { header: 'Gender', key: 'gender', width: 12 },
+            { header: 'Employed', key: 'isEmployed', width: 12 },
+            { header: 'Organization', key: 'organization', width: 28 },
+            { header: 'Job Title', key: 'jobTitle', width: 24 },
+            { header: 'Address (English)', key: 'addressEn', width: 32 },
+            { header: 'Address (Bangla)', key: 'addressBn', width: 32 },
+            { header: 'Status', key: 'status', width: 12 },
+            { header: 'Created At', key: 'createdAt', width: 20 },
+            { header: 'Updated At', key: 'updatedAt', width: 20 },
+        ];
+
+        worksheet.columns = columns;
+
+        const headerRow = worksheet.getRow(5);
+        headerRow.values = columns.map((column) => column.header);
+        headerRow.height = 22;
+        headerRow.eachCell((cell) => {
+            cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+            cell.fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: { argb: 'FF1E3A5F' },
+            };
+            cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+            cell.border = {
+                top: { style: 'thin', color: { argb: 'FFD1D5DB' } },
+                left: { style: 'thin', color: { argb: 'FFD1D5DB' } },
+                bottom: { style: 'thin', color: { argb: 'FFD1D5DB' } },
+                right: { style: 'thin', color: { argb: 'FFD1D5DB' } },
+            };
+        });
+
+        approvedStudents.forEach((student, index) => {
+            const row = worksheet.addRow({
+                titasId: student.originalId ? `TITAS-${student.originalId}` : `TITAS-${student.regNo || String(student._id).slice(-6).toUpperCase()}`,
+                nameBn: student.nameBn || '',
+                nameEn: student.nameEn || '',
+                session: student.session || '',
+                regNo: student.regNo || '',
+                department: student.department || '',
+                hall: student.hall || '',
+                mobile: student.mobile || '',
+                email: student.email || '',
+                upazila: student.upazila || '',
+                bloodGroup: student.bloodGroup || '',
+                gender: student.gender || '',
+                isEmployed: student.isEmployed ? 'Yes' : 'No',
+                organization: student.organization || '',
+                jobTitle: student.jobTitle || '',
+                addressEn: student.addressEn || '',
+                addressBn: student.addressBn || '',
+                status: student.status || '',
+                createdAt: student.createdAt ? new Date(student.createdAt).toLocaleString('en-GB') : '',
+                updatedAt: student.updatedAt ? new Date(student.updatedAt).toLocaleString('en-GB') : '',
+            });
+
+            row.height = 20;
+            row.eachCell((cell) => {
+                cell.alignment = { vertical: 'top', horizontal: 'left', wrapText: true };
+                cell.border = {
+                    top: { style: 'thin', color: { argb: 'FFE5E7EB' } },
+                    left: { style: 'thin', color: { argb: 'FFE5E7EB' } },
+                    bottom: { style: 'thin', color: { argb: 'FFE5E7EB' } },
+                    right: { style: 'thin', color: { argb: 'FFE5E7EB' } },
+                };
+                if (index % 2 === 0) {
+                    cell.fill = {
+                        type: 'pattern',
+                        pattern: 'solid',
+                        fgColor: { argb: 'FFF8FAFC' },
+                    };
+                }
+            });
+        });
+
+        worksheet.autoFilter = {
+            from: { row: 5, column: 1 },
+            to: { row: 5, column: totalColumns },
+        };
+
+        const filename = `titas-approved-students-${generatedAt.toISOString().slice(0, 10)}.xlsx`;
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+        await workbook.xlsx.write(res);
+        return res.end();
+    } catch (err) {
+        console.error('Student export error:', err);
+        return res.status(500).json({ msg: 'Failed to export approved students' });
+    }
+});
+
 // @route   PUT /api/admin/students/:id
 // @desc    Update single student details (Admin direct edit)
 // @access  Private Admin
@@ -124,6 +356,11 @@ router.put('/students/:id', protectAdmin, async (req, res) => {
         });
 
         if (changesMade) {
+            const beforeValues = {};
+            Object.keys(updateData).forEach((field) => {
+                beforeValues[field] = student[field];
+            });
+
             const updatedStudent = await Student.findByIdAndUpdate(
                 req.params.id,
                 {
@@ -138,6 +375,20 @@ router.put('/students/:id', protectAdmin, async (req, res) => {
                 },
                 { new: true } // Return updated document, don't strictly validate entire old doc
             );
+
+            await logAdminAction(req, {
+                module: 'students',
+                action: 'edit_profile',
+                targetType: 'student',
+                targetId: updatedStudent._id,
+                targetLabel: updatedStudent.nameEn || updatedStudent.nameBn || updatedStudent.regNo,
+                description: `Edited student profile for ${updatedStudent.nameEn || updatedStudent.nameBn}`,
+                details: {
+                    before: beforeValues,
+                    after: updateData,
+                },
+            });
+
             res.json(updatedStudent);
         } else {
             res.json(student); // no changes
@@ -145,6 +396,60 @@ router.put('/students/:id', protectAdmin, async (req, res) => {
     } catch (err) {
         console.error('Update Error:', err);
         res.status(500).json({ msg: 'Server Error', error: err.message });
+    }
+});
+
+// @route   DELETE /api/admin/students/:id
+// @desc    Delete a student record
+// @access  Private Admin
+router.delete('/students/:id', protectAdmin, async (req, res) => {
+    try {
+        const student = await Student.findById(req.params.id);
+        if (!student) return res.status(404).json({ msg: 'Student not found' });
+
+        const deletedSnapshot = {
+            nameEn: student.nameEn,
+            nameBn: student.nameBn,
+            regNo: student.regNo,
+            session: student.session,
+            department: student.department,
+            status: student.status,
+        };
+
+        // Best-effort cleanup for uploaded profile photo.
+        if (student.photo && typeof student.photo === 'string' && student.photo.startsWith('/uploads/')) {
+            const fsLocal = require('fs');
+            const pathLocal = require('path');
+            const filePath = pathLocal.join(__dirname, '..', student.photo.replace(/^\//, ''));
+            if (fsLocal.existsSync(filePath)) {
+                fsLocal.unlinkSync(filePath);
+            }
+        }
+
+        // Remove related profile edit requests if present.
+        try {
+            const ProfileEditModel = require('../models/ProfileEdit');
+            await ProfileEditModel.deleteMany({ student: student._id });
+        } catch (e) {
+            // Ignore if cleanup model/file is unavailable.
+        }
+
+        await student.deleteOne();
+
+        await logAdminAction(req, {
+            module: 'students',
+            action: 'delete_record',
+            targetType: 'student',
+            targetId: req.params.id,
+            targetLabel: deletedSnapshot.nameEn || deletedSnapshot.nameBn || deletedSnapshot.regNo,
+            description: `Deleted student record for ${deletedSnapshot.nameEn || deletedSnapshot.nameBn}`,
+            details: deletedSnapshot,
+        });
+
+        return res.json({ success: true, msg: 'Student deleted successfully' });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ msg: 'Server Error' });
     }
 });
 
@@ -282,6 +587,22 @@ router.put('/students/:id/status', protectAdmin, async (req, res) => {
         });
 
         const updatedStudent = await student.save();
+
+        await logAdminAction(req, {
+            module: 'students',
+            action: status === 'Approved' ? 'approve_student' : 'reject_student',
+            targetType: 'student',
+            targetId: updatedStudent._id,
+            targetLabel: updatedStudent.nameEn || updatedStudent.nameBn || updatedStudent.regNo,
+            description: `${status === 'Approved' ? 'Approved' : 'Rejected'} student ${updatedStudent.nameEn || updatedStudent.nameBn}`,
+            details: {
+                status,
+                regNo: updatedStudent.regNo,
+                session: updatedStudent.session,
+                department: updatedStudent.department,
+            },
+        });
+
         res.json(updatedStudent);
     } catch (err) {
         console.error(err);
@@ -385,6 +706,19 @@ router.put('/edits/:id/approve', protectAdmin, async (req, res) => {
         edit.reviewedBy = req.admin.username;
         await edit.save();
 
+        await logAdminAction(req, {
+            module: 'students',
+            action: 'approve_profile_edit',
+            targetType: 'profile-edit',
+            targetId: edit._id,
+            targetLabel: student.nameEn || student.nameBn || student.regNo,
+            description: `Approved profile edit for ${student.nameEn || student.nameBn}`,
+            details: {
+                studentId: student._id,
+                changes: Object.fromEntries(edit.changes),
+            },
+        });
+
         res.json({ msg: 'Edit approved and applied', edit });
     } catch (err) {
         console.error(err);
@@ -405,6 +739,19 @@ router.put('/edits/:id/reject', protectAdmin, async (req, res) => {
         edit.reviewedAt = new Date();
         edit.reviewedBy = req.admin.username;
         await edit.save();
+
+        await logAdminAction(req, {
+            module: 'students',
+            action: 'reject_profile_edit',
+            targetType: 'profile-edit',
+            targetId: edit._id,
+            targetLabel: String(edit.student || ''),
+            description: `Rejected profile edit request ${edit._id}`,
+            details: {
+                studentId: edit.student,
+                changes: Object.fromEntries(edit.changes || []),
+            },
+        });
 
         res.json({ msg: 'Edit rejected', edit });
     } catch (err) {

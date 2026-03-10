@@ -17,8 +17,20 @@ const studentSchema = new mongoose.Schema({
     hall: { type: String, required: true },
     gender: { type: String, required: true },
     isEmployed: { type: Boolean, default: false },
-    organization: { type: String },
-    jobTitle: { type: String },
+    organization: {
+        type: String,
+        required: function () {
+            return this.isEmployed;
+        },
+        trim: true,
+    },
+    jobTitle: {
+        type: String,
+        required: function () {
+            return this.isEmployed;
+        },
+        trim: true,
+    },
     photo: { type: String }, // Path to the uploaded image
     password: { type: String, required: true },
     status: {

@@ -7,6 +7,7 @@ const Admin = require('../models/Admin');
 const BlogPost = require('../models/BlogPost');
 const BlogCategory = require('../models/BlogCategory');
 const BlogTag = require('../models/BlogTag');
+const { logAdminAction } = require('../utils/auditLogger');
 
 const router = express.Router();
 
@@ -307,6 +308,20 @@ router.post('/admin/posts', protectAdmin, upload.single('featuredImage'), async 
             .populate('category', 'name slug')
             .populate('tags', 'name slug');
 
+        await logAdminAction(req, {
+            module: 'blog',
+            action: normalizedStatus === 'published' ? 'publish_content' : 'create_content',
+            targetType: 'blog-post',
+            targetId: populated._id,
+            targetLabel: populated.title,
+            description: `${normalizedStatus === 'published' ? 'Published' : 'Created'} blog post "${populated.title}"`,
+            details: {
+                status: populated.status,
+                category: populated.category?.name || '',
+                author: populated.author,
+            },
+        });
+
         res.status(201).json(populated);
     } catch (error) {
         res.status(500).json({ msg: error.message || 'Server Error' });
@@ -317,6 +332,13 @@ router.put('/admin/posts/:id', protectAdmin, upload.single('featuredImage'), asy
     try {
         const post = await BlogPost.findById(req.params.id);
         if (!post) return res.status(404).json({ msg: 'Post not found' });
+
+        const beforeState = {
+            title: post.title,
+            status: post.status,
+            category: post.category,
+            author: post.author,
+        };
 
         const { title, content, excerpt, author, category, status } = req.body;
         const tagIds = parseTags(req.body.tags);
@@ -358,6 +380,30 @@ router.put('/admin/posts/:id', protectAdmin, upload.single('featuredImage'), asy
             .populate('category', 'name slug')
             .populate('tags', 'name slug');
 
+        const action = beforeState.status !== 'published' && updated.status === 'published'
+            ? 'publish_content'
+            : (beforeState.status === 'published' && updated.status !== 'published'
+                ? 'unpublish_content'
+                : 'update_content');
+
+        await logAdminAction(req, {
+            module: 'blog',
+            action,
+            targetType: 'blog-post',
+            targetId: updated._id,
+            targetLabel: updated.title,
+            description: `${action.replace(/_/g, ' ')} for blog post "${updated.title}"`,
+            details: {
+                before: beforeState,
+                after: {
+                    title: updated.title,
+                    status: updated.status,
+                    category: updated.category?.name || '',
+                    author: updated.author,
+                },
+            },
+        });
+
         res.json(updated);
     } catch (error) {
         res.status(500).json({ msg: error.message || 'Server Error' });
@@ -369,7 +415,25 @@ router.delete('/admin/posts/:id', protectAdmin, async (req, res) => {
         const post = await BlogPost.findById(req.params.id);
         if (!post) return res.status(404).json({ msg: 'Post not found' });
 
+        const deletedSnapshot = {
+            title: post.title,
+            slug: post.slug,
+            status: post.status,
+            author: post.author,
+        };
+
         await post.deleteOne();
+
+        await logAdminAction(req, {
+            module: 'blog',
+            action: 'remove_content',
+            targetType: 'blog-post',
+            targetId: req.params.id,
+            targetLabel: deletedSnapshot.title,
+            description: `Removed blog post "${deletedSnapshot.title}"`,
+            details: deletedSnapshot,
+        });
+
         res.json({ msg: 'Post deleted successfully' });
     } catch (error) {
         res.status(500).json({ msg: 'Server Error' });

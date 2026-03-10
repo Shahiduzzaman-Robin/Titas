@@ -5,7 +5,7 @@ const customStyles = {
     control: (provided, state) => ({
         ...provided,
         backgroundColor: 'white',
-        borderColor: state.isFocused ? '#cbd5e1' : '#f8fafc', // Very subtle border
+        borderColor: state.isFocused ? '#cbd5e1' : '#e2e8f0',
         borderRadius: '20px', // More rounded like screenshot
         padding: state.selectProps.Icon ? '0.15rem 0.5rem 0.15rem 2.8rem' : '0.15rem 0.8rem',
         boxShadow: 'none',

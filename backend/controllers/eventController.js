@@ -1,4 +1,5 @@
 const Event = require('../models/Event');
+const { logAdminAction } = require('../utils/auditLogger');
 
 // @desc    Get all upcoming events (Public)
 // @route   GET /api/events
@@ -36,6 +37,18 @@ exports.getAllEvents = async (req, res) => {
 exports.createEvent = async (req, res) => {
     try {
         const event = await Event.create(req.body);
+        await logAdminAction(req, {
+            module: 'events',
+            action: 'publish_content',
+            targetType: 'event',
+            targetId: event._id,
+            targetLabel: event.title || event.name || 'Untitled Event',
+            description: `Published event "${event.title || event.name || 'Untitled Event'}"`,
+            details: {
+                date: event.date,
+                location: event.location,
+            },
+        });
         res.status(201).json({ success: true, data: event });
     } catch (error) {
         console.error('Error creating event:', error);
@@ -48,14 +61,36 @@ exports.createEvent = async (req, res) => {
 // @access  Private/Admin
 exports.updateEvent = async (req, res) => {
     try {
+        const existingEvent = await Event.findById(req.params.id);
+        if (!existingEvent) {
+            return res.status(404).json({ success: false, message: 'Event not found' });
+        }
+
         const event = await Event.findByIdAndUpdate(req.params.id, req.body, {
             new: true,
             runValidators: true
         });
 
-        if (!event) {
-            return res.status(404).json({ success: false, message: 'Event not found' });
-        }
+        await logAdminAction(req, {
+            module: 'events',
+            action: 'update_content',
+            targetType: 'event',
+            targetId: event._id,
+            targetLabel: event.title || event.name || 'Untitled Event',
+            description: `Updated event "${event.title || event.name || 'Untitled Event'}"`,
+            details: {
+                before: {
+                    title: existingEvent.title,
+                    date: existingEvent.date,
+                    location: existingEvent.location,
+                },
+                after: {
+                    title: event.title,
+                    date: event.date,
+                    location: event.location,
+                },
+            },
+        });
 
         res.status(200).json({ success: true, data: event });
     } catch (error) {
@@ -74,6 +109,19 @@ exports.deleteEvent = async (req, res) => {
         if (!event) {
             return res.status(404).json({ success: false, message: 'Event not found' });
         }
+
+        await logAdminAction(req, {
+            module: 'events',
+            action: 'remove_content',
+            targetType: 'event',
+            targetId: event._id,
+            targetLabel: event.title || event.name || 'Untitled Event',
+            description: `Removed event "${event.title || event.name || 'Untitled Event'}"`,
+            details: {
+                date: event.date,
+                location: event.location,
+            },
+        });
 
         res.status(200).json({ success: true, data: {} });
     } catch (error) {

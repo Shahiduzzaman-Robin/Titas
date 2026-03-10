@@ -28,10 +28,21 @@ export const AdminNavbar = ({ active }) => {
         }
     }, [active]);
 
-    const handleLogout = () => {
-        localStorage.removeItem('admin_token');
-        localStorage.removeItem('admin_user');
-        navigate('/login');
+    const handleLogout = async () => {
+        const token = localStorage.getItem('admin_token');
+        try {
+            if (token) {
+                await axios.post(`${API_BASE_URL}/api/admin/logout`, {}, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+            }
+        } catch (error) {
+            console.error('Failed to log admin logout:', error);
+        } finally {
+            localStorage.removeItem('admin_token');
+            localStorage.removeItem('admin_user');
+            navigate('/login');
+        }
     };
 
     return (
@@ -87,6 +98,7 @@ export const AdminNavbar = ({ active }) => {
                 <Link to="/admin/notices" className={`admin-nav-link bn-text ${active === 'notices' ? 'active' : ''}`}>নোটিস বোর্ড</Link>
                 <Link to="/admin/gallery" className={`admin-nav-link bn-text ${active === 'gallery' ? 'active' : ''}`}>গ্যালারি</Link>
                 <Link to="/admin/events" className={`admin-nav-link bn-text ${active === 'events' ? 'active' : ''}`}>ইভেন্ট</Link>
+                <Link to="/admin/audit-logs" className={`admin-nav-link bn-text ${active === 'audit-logs' ? 'active' : ''}`}>অডিট লগস</Link>
             </div>
             <div className="admin-nav-right">
                 <button className="admin-lang-btn"><Globe size={14} /> EN</button>

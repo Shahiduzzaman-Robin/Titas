@@ -105,6 +105,7 @@ const StudentModal = ({ student, onClose, onStatusChange }) => {
 const AdminStudents = () => {
     const [students, setStudents] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [exporting, setExporting] = useState(false);
     const [searchParams] = useSearchParams();
 
     const [filters, setFilters] = useState({
@@ -156,6 +157,45 @@ const AdminStudents = () => {
         } catch (err) { console.error(err); }
     };
 
+    const handleExportApproved = async () => {
+        setExporting(true);
+        try {
+            const res = await axios.get(`${API_BASE_URL}/api/admin/students/export/approved`, {
+                headers: { Authorization: `Bearer ${token}` },
+                responseType: 'blob'
+            });
+
+            const contentDisposition = res.headers['content-disposition'] || '';
+            const filenameMatch = contentDisposition.match(/filename="?([^\"]+)"?/i);
+            const filename = filenameMatch?.[1] || `titas-approved-students.xlsx`;
+
+            const blob = new Blob([res.data], {
+                type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            });
+
+            const downloadUrl = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = downloadUrl;
+            link.setAttribute('download', filename);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(downloadUrl);
+        } catch (err) {
+            const status = err?.response?.status;
+            if (status === 401 || status === 403) {
+                localStorage.removeItem('admin_token');
+                localStorage.removeItem('admin_user');
+                navigate('/login');
+                return;
+            }
+            console.error('Failed to export students:', err);
+            window.alert('Approved students export failed.');
+        } finally {
+            setExporting(false);
+        }
+    };
+
     const formatDate = (dateStr) => {
         const d = new Date(dateStr);
         return { date: d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }), time: d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }) };
@@ -177,8 +217,12 @@ const AdminStudents = () => {
                         <h1 className="bn-text">শিক্ষার্থী তালিকা</h1>
                         <p className="bn-text">সকল নিবন্ধিত শিক্ষার্থীদের তথ্য</p>
                     </div>
-                    <button style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', padding: '0.5rem 1rem', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', cursor: 'pointer', color: '#475569' }}>
-                        <Download size={16} /> Export
+                    <button
+                        onClick={handleExportApproved}
+                        disabled={exporting}
+                        style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', padding: '0.5rem 1rem', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', cursor: exporting ? 'not-allowed' : 'pointer', color: '#475569', opacity: exporting ? 0.7 : 1 }}
+                    >
+                        <Download size={16} /> {exporting ? 'Exporting...' : 'Export'}
                     </button>
                 </div>
 

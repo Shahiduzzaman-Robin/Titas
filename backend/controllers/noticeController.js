@@ -1,4 +1,5 @@
 const Notice = require('../models/Notice');
+const { logAdminAction } = require('../utils/auditLogger');
 
 // @desc    Get all active notices (Public)
 // @route   GET /api/notices
@@ -38,6 +39,19 @@ exports.createNotice = async (req, res) => {
         }
 
         const notice = await Notice.create({ text, link, priority, isActive });
+        await logAdminAction(req, {
+            module: 'notices',
+            action: 'publish_content',
+            targetType: 'notice',
+            targetId: notice._id,
+            targetLabel: (notice.text || '').slice(0, 80),
+            description: `Published notice "${(notice.text || '').slice(0, 60)}"`,
+            details: {
+                priority: notice.priority,
+                isActive: notice.isActive,
+                link: notice.link,
+            },
+        });
         res.status(201).json({ success: true, data: notice });
     } catch (error) {
         console.error('Error creating notice:', error);
@@ -50,14 +64,36 @@ exports.createNotice = async (req, res) => {
 // @access  Private/Admin
 exports.updateNotice = async (req, res) => {
     try {
+        const existingNotice = await Notice.findById(req.params.id);
+        if (!existingNotice) {
+            return res.status(404).json({ success: false, message: 'Notice not found' });
+        }
+
         const notice = await Notice.findByIdAndUpdate(req.params.id, req.body, {
             new: true,
             runValidators: true
         });
 
-        if (!notice) {
-            return res.status(404).json({ success: false, message: 'Notice not found' });
-        }
+        await logAdminAction(req, {
+            module: 'notices',
+            action: 'update_content',
+            targetType: 'notice',
+            targetId: notice._id,
+            targetLabel: (notice.text || '').slice(0, 80),
+            description: `Updated notice "${(notice.text || '').slice(0, 60)}"`,
+            details: {
+                before: {
+                    text: existingNotice.text,
+                    priority: existingNotice.priority,
+                    isActive: existingNotice.isActive,
+                },
+                after: {
+                    text: notice.text,
+                    priority: notice.priority,
+                    isActive: notice.isActive,
+                },
+            },
+        });
 
         res.status(200).json({ success: true, data: notice });
     } catch (error) {
@@ -76,6 +112,20 @@ exports.deleteNotice = async (req, res) => {
         if (!notice) {
             return res.status(404).json({ success: false, message: 'Notice not found' });
         }
+
+        await logAdminAction(req, {
+            module: 'notices',
+            action: 'remove_content',
+            targetType: 'notice',
+            targetId: notice._id,
+            targetLabel: (notice.text || '').slice(0, 80),
+            description: `Removed notice "${(notice.text || '').slice(0, 60)}"`,
+            details: {
+                priority: notice.priority,
+                isActive: notice.isActive,
+                link: notice.link,
+            },
+        });
 
         res.status(200).json({ success: true, data: {} });
     } catch (error) {

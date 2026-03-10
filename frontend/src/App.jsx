@@ -20,6 +20,7 @@ import AdminMessages from './pages/AdminMessages';
 import AdminNotices from './pages/AdminNotices';
 import AdminGallery from './pages/AdminGallery';
 import AdminEvents from './pages/AdminEvents';
+import AdminAuditLogs from './pages/AdminAuditLogs';
 import Contact from './pages/Contact';
 import Navbar from './components/Navbar';
 
@@ -48,6 +49,7 @@ function App() {
                         <Route path="/admin/notices" element={<AdminNotices />} />
                         <Route path="/admin/gallery" element={<AdminGallery />} />
                         <Route path="/admin/events" element={<AdminEvents />} />
+                        <Route path="/admin/audit-logs" element={<AdminAuditLogs />} />
                     </Routes>
                 </main>
             </div>

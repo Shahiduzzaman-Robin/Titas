@@ -1,6 +1,7 @@
 const GalleryImage = require('../models/GalleryImage');
 const fs = require('fs');
 const path = require('path');
+const { logAdminAction } = require('../utils/auditLogger');
 
 // @desc    Get all gallery images (Public)
 // @route   GET /api/gallery
@@ -35,6 +36,19 @@ exports.uploadGalleryImage = async (req, res) => {
             category
         });
 
+        await logAdminAction(req, {
+            module: 'gallery',
+            action: 'publish_content',
+            targetType: 'gallery-image',
+            targetId: image._id,
+            targetLabel: image.title || image.caption || req.file.originalname,
+            description: `Published gallery image "${image.title || image.caption || req.file.originalname}"`,
+            details: {
+                category: image.category,
+                imageUrl: image.imageUrl,
+            },
+        });
+
         res.status(201).json({ success: true, data: image });
     } catch (error) {
         console.error('Error uploading gallery image:', error);
@@ -60,6 +74,19 @@ exports.deleteGalleryImage = async (req, res) => {
         }
 
         await image.deleteOne();
+
+        await logAdminAction(req, {
+            module: 'gallery',
+            action: 'remove_content',
+            targetType: 'gallery-image',
+            targetId: image._id,
+            targetLabel: image.title || image.caption || image.imageUrl,
+            description: `Removed gallery image "${image.title || image.caption || image.imageUrl}"`,
+            details: {
+                category: image.category,
+                imageUrl: image.imageUrl,
+            },
+        });
 
         res.status(200).json({ success: true, data: {} });
     } catch (error) {

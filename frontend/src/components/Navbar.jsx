@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Globe, User, LogOut } from 'lucide-react';
+import axios from 'axios';
 import logo from '../assets/logo.png';
+import { API_BASE_URL } from '../constants';
 import '../styles/Navbar.css';
 
 const Navbar = () => {
@@ -37,11 +39,21 @@ const Navbar = () => {
         navigate('/login');
     };
 
-    const handleAdminLogout = () => {
-        localStorage.removeItem('admin_token');
-        localStorage.removeItem('admin_user');
-        setIsDropdownOpen(false);
-        navigate('/login');
+    const handleAdminLogout = async () => {
+        try {
+            if (adminToken) {
+                await axios.post(`${API_BASE_URL}/api/admin/logout`, {}, {
+                    headers: { Authorization: `Bearer ${adminToken}` }
+                });
+            }
+        } catch (error) {
+            console.error('Failed to log admin logout:', error);
+        } finally {
+            localStorage.removeItem('admin_token');
+            localStorage.removeItem('admin_user');
+            setIsDropdownOpen(false);
+            navigate('/login');
+        }
     };
 
     const scrollToSection = (e, sectionId) => {

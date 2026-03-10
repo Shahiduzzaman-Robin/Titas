@@ -8,6 +8,53 @@ const Student = require('../models/Student');
 
 const router = express.Router();
 
+const toDuplicateRecord = (studentDoc) => {
+    if (!studentDoc) return null;
+    const student = studentDoc.toObject ? studentDoc.toObject() : studentDoc;
+    const titasId = student.originalId ? `TITAS-${student.originalId}` : `TITAS-${String(student._id).slice(-6).toUpperCase()}`;
+    return {
+        nameBn: student.nameBn || '',
+        nameEn: student.nameEn || '',
+        titasId,
+    };
+};
+
+const buildDuplicatePayload = async ({ regNo, mobile, email }) => {
+    const duplicates = { regNo: false, mobile: false, email: false };
+    const messages = { regNo: '', mobile: '', email: '' };
+    const records = { regNo: null, mobile: null, email: null };
+
+    if (regNo && String(regNo).trim()) {
+        const found = await Student.findOne({ regNo: String(regNo).trim() }).select('_id originalId nameBn nameEn');
+        if (found) {
+            duplicates.regNo = true;
+            messages.regNo = 'এই রেজিস্ট্রেশন নম্বর দিয়ে ইতিমধ্যে নিবন্ধন করা হয়েছে।';
+            records.regNo = toDuplicateRecord(found);
+        }
+    }
+
+    if (mobile && String(mobile).trim()) {
+        const found = await Student.findOne({ mobile: String(mobile).trim() }).select('_id originalId nameBn nameEn');
+        if (found) {
+            duplicates.mobile = true;
+            messages.mobile = 'এই মোবাইল নম্বর দিয়ে ইতিমধ্যে নিবন্ধন করা হয়েছে।';
+            records.mobile = toDuplicateRecord(found);
+        }
+    }
+
+    if (email && String(email).trim()) {
+        const normalizedEmail = String(email).trim().toLowerCase();
+        const found = await Student.findOne({ email: { $regex: `^${normalizedEmail}$`, $options: 'i' } }).select('_id originalId nameBn nameEn');
+        if (found) {
+            duplicates.email = true;
+            messages.email = 'এই ইমেইল দিয়ে ইতিমধ্যে নিবন্ধন করা হয়েছে।';
+            records.email = toDuplicateRecord(found);
+        }
+    }
+
+    return { duplicates, messages, records };
+};
+
 // Multer storage configuration for photo uploads
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -34,6 +81,20 @@ const upload = multer({
     }
 });
 
+// @route   GET /api/students/check-duplicate
+// @desc    Check duplicate values for regNo, mobile, email
+// @access  Public
+router.get('/check-duplicate', async (req, res) => {
+    try {
+        const { regNo, mobile, email } = req.query;
+        const payload = await buildDuplicatePayload({ regNo, mobile, email });
+        return res.json(payload);
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ msg: 'Server Error' });
+    }
+});
+
 // @route   POST /api/students
 // @desc    Register a new student
 // @access  Public
@@ -42,23 +103,30 @@ router.post('/', upload.single('photo'), async (req, res) => {
         const {
             session, regNo, nameEn, nameBn, mobile, email,
             addressEn, addressBn, upazila, department,
-            bloodGroup, hall, gender, isEmployed, password
+            bloodGroup, hall, gender, isEmployed, organization, jobTitle, password
         } = req.body;
 
+        const employedFlag = isEmployed === 'true' || isEmployed === true;
+
+        if (employedFlag) {
+            if (!String(organization || '').trim()) {
+                return res.status(400).json({ msg: 'প্রতিষ্ঠান / দপ্তর এর নাম প্রদান করুন।' });
+            }
+            if (!String(jobTitle || '').trim()) {
+                return res.status(400).json({ msg: 'পদবী প্রদান করুন।' });
+            }
+        }
+
         // Check if student already exists by Reg No, Mobile, or Email
-        let regNoExists = await Student.findOne({ regNo });
-        if (regNoExists) {
-            return res.status(400).json({ msg: 'এই রেজিস্ট্রেশন নম্বর দিয়ে ইতিমধ্যে নিবন্ধন করা হয়েছে।' });
+        const duplicateCheck = await buildDuplicatePayload({ regNo, mobile, email });
+        if (duplicateCheck.duplicates.regNo) {
+            return res.status(400).json({ msg: duplicateCheck.messages.regNo });
         }
-
-        let mobileExists = await Student.findOne({ mobile });
-        if (mobileExists) {
-            return res.status(400).json({ msg: 'এই মোবাইল নম্বর দিয়ে ইতিমধ্যে নিবন্ধন করা হয়েছে।' });
+        if (duplicateCheck.duplicates.mobile) {
+            return res.status(400).json({ msg: duplicateCheck.messages.mobile });
         }
-
-        let emailExists = await Student.findOne({ email });
-        if (emailExists) {
-            return res.status(400).json({ msg: 'এই ইমেইল দিয়ে ইতিমধ্যে নিবন্ধন করা হয়েছে।' });
+        if (duplicateCheck.duplicates.email) {
+            return res.status(400).json({ msg: duplicateCheck.messages.email });
         }
 
         const newStudent = new Student({
@@ -67,7 +135,7 @@ router.post('/', upload.single('photo'), async (req, res) => {
             nameEn,
             nameBn,
             mobile,
-            email,
+            email: String(email).trim().toLowerCase(),
             addressEn,
             addressBn,
             upazila,
@@ -75,7 +143,9 @@ router.post('/', upload.single('photo'), async (req, res) => {
             bloodGroup,
             hall,
             gender,
-            isEmployed: isEmployed === 'true' || isEmployed === true,
+            isEmployed: employedFlag,
+            organization: employedFlag ? String(organization || '').trim() : '',
+            jobTitle: employedFlag ? String(jobTitle || '').trim() : '',
             photo: req.file ? `/uploads/${req.file.filename}` : null,
             password
         });

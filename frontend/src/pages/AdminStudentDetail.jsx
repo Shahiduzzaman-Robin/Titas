@@ -75,6 +75,22 @@ const AdminStudentDetail = () => {
         }
     };
 
+    const handleDeleteStudent = async () => {
+        const confirmed = window.confirm('আপনি কি নিশ্চিতভাবে এই শিক্ষার্থীকে মুছে ফেলতে চান? এই কাজটি আর ফিরিয়ে আনা যাবে না।');
+        if (!confirmed) return;
+
+        try {
+            await axios.delete(`${API_BASE_URL}/api/admin/students/${id}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            navigate('/admin/students');
+        } catch (err) {
+            console.error(err);
+            const msg = err.response?.data?.msg || 'Delete failed';
+            alert(msg);
+        }
+    };
+
     if (loading) return (
         <div className="admin-layout"><AdminNavbar active="students" />
             <div style={{ textAlign: 'center', padding: '5rem', color: '#64748b' }}>লোডিং...</div>
@@ -114,7 +130,7 @@ const AdminStudentDetail = () => {
                     </div>
                     <div className="asd-topbar-right">
                         <button className="asd-action-btn edit" onClick={openEditModal}><Pencil size={15} /> <span className="bn-text">সম্পাদনা করুন</span></button>
-                        <button className="asd-action-btn delete"><Trash2 size={15} /></button>
+                        <button className="asd-action-btn delete" onClick={handleDeleteStudent} title="শিক্ষার্থী মুছে ফেলুন"><Trash2 size={15} /></button>
                     </div>
                 </div>
 

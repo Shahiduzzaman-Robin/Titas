@@ -1,74 +1,146 @@
-# Titas DU Student Portal 🎓🇧🇩
+# Titas DU Student Portal
 
-A modern, high-performance community platform for the students of **Dhaka University** hailing from **Brahmanbaria** district (**Titas**). Built with the MERN stack and a focus on visual excellence and security.
+Community platform for Dhaka University students from Brahmanbaria (Titas), built with React, Node.js, Express, and MongoDB.
 
-## 🚀 Key Features
+## Overview
 
-### 🏢 Student Directory
-- **Searchable Database**: Quickly find fellow students by name, registration number, or phone.
-- **Privacy First**: Implemented server-side masking for mobile numbers to protect student data.
-- **Academic Profiles**: Detailed profiles including department, session, and hall information.
+This project includes:
+- A public-facing website (home, blog, contact, events, gallery, student directory)
+- A protected admin area (content management, student approvals, inbox/messages)
+- A backend API with MongoDB storage
 
-### ✍️ Dynamic Blog System
-- **Editorial Experience**: Integrated a custom blog editor with dynamic image resizing and text-wrapping options.
-- **Category Management**: Organize content by Announcements, Events, Alumni Stories, and more.
-- **Social Integration**: Optimized Open Graph (OG) meta tags for beautiful social media previews (Facebook, WhatsApp, etc.).
+## Core Features
 
-### 📢 Active Notice Board
-- **Emergency Ticker**: Real-time scrolling ticker for urgent announcements (Schedules, Admission help, Deadlines).
-- **Admin CMS**: Dedicated interface for administrators to publish and manage notices with priority levels (New, Urgent, Normal).
+### Student Directory
+- Search by name, registration number, or phone
+- Profile details (department, session, hall, batch)
+- Privacy-minded phone masking on server side
 
-### 🛠️ Admin Dashboard
-- **Inbox System**: Manage student inquiries and contact form submissions.
-- **Member Management**: Approve new registrations and verify student records.
-- **Content Control**: Full CRUD capabilities for blogs and notices.
+### Blog and Content
+- Rich text blog posting with media support
+- Categories and tags
+- Social-share friendly preview endpoint
 
-## 💻 Tech Stack
+### Notices and Communication
+- Scrolling urgent notice ticker on homepage
+- Contact form with admin-side message management
 
-- **Frontend**: React (Vite), Lucide Icons, Vanilla CSS (Custom Design System).
-- **Backend**: Node.js, Express.js.
-- **Database**: MongoDB (Mongoose).
-- **Security**: JWT Authentication, BCrypt Password Hashing, Server-side data masking.
+### Events, Gallery, Community
+- Public event listing and gallery
+- Executive committee and testimonials sections
+- Responsive homepage components
 
-## 🛠️ Installation & Setup
+### Admin Panel
+- Approve/manage students
+- Manage blog posts, notices, events, gallery items
+- Review incoming contact messages
 
-1. **Clone the repo**:
-   ```bash
-   git clone https://github.com/Shahiduzzaman-Robin/Titas.git
-   ```
+## Tech Stack
 
-2. **Backend Setup**:
-   ```bash
-   cd backend
-   npm install
-   # Create a .env file with PORT, MONGO_URI, and JWT_SECRET
-   npm start
-   ```
+- Frontend: React, Vite, React Router, Axios, Lucide Icons
+- Backend: Node.js, Express, Mongoose
+- Database: MongoDB
+- Auth/Security: JWT, bcrypt
 
-3. **Frontend Setup**:
-   ```bash
-   cd frontend
-   npm install
-   npm run dev
-   ```
+## Prerequisites
 
----
-## 📸 Project Screenshots
+- Node.js 18+
+- npm
+- MongoDB (local or remote)
 
-### 🏠 Home Page
+## Environment Variables
+
+Create backend/.env with at least:
+
+| Variable | Required | Example |
+|---|---|---|
+| PORT | No | 5010 |
+| MONGO_URI | Yes | mongodb://127.0.0.1:27017/titas_clone |
+| JWT_SECRET | Yes | change_this_secret |
+| FRONTEND_URL | No | http://localhost:5173 |
+| BACKEND_URL | No | http://localhost:5010 |
+
+## Local Development
+
+1. Clone and install dependencies
+
+```bash
+git clone https://github.com/Shahiduzzaman-Robin/Titas.git
+cd Titas
+
+cd backend && npm install
+cd ../frontend && npm install
+```
+
+2. Start backend
+
+```bash
+cd backend
+npm run dev
+```
+
+3. Start frontend (new terminal)
+
+```bash
+cd frontend
+npm run dev
+```
+
+## Default Local URLs
+
+- Frontend: http://localhost:5173/
+- Backend: http://localhost:5010/
+- API sample: http://localhost:5010/api/blog/posts
+
+## Available Scripts
+
+### Backend
+- npm run dev
+- npm start
+- npm run seed:blog-demo
+
+### Frontend
+- npm run dev
+- npm run build
+- npm run preview
+
+## API Route Groups
+
+- /api/students
+- /api/admin
+- /api/blog
+- /api/contact
+- /api/notices
+- /api/gallery
+- /api/events
+
+Share/preview route:
+- /share/blog/:slug
+
+## Recent Updates (March 10, 2026)
+
+- Redesigned homepage Alumni Spotlight section
+- Improved dark-section contrast and card readability
+- Added alumni impact stat chips
+- Improved mobile spacing and typography for spotlight cards
+- Corrected CTA text to Explore Alumni Directory
+- Updated project documentation and run instructions
+
+## Screenshots
+
+### Home Page
 ![Home Page](screenshots/home.png)
 
-### 👥 Student Directory
+### Student Directory
 ![Student Directory](screenshots/directory.png)
 
-### 🔐 Unified Login
+### Login
 ![Login Page](screenshots/login.png)
 
-### 📊 Admin Dashboard
+### Admin Dashboard
 ![Admin Dashboard](screenshots/admin.png)
 
-### ✍️ Blog System
+### Blog
 ![Blog Page](screenshots/blog.png)
 
----
-*Developed as part of the Titas DU Digital Transformation Project.*
+Developed as part of the Titas DU digital transformation effort.
