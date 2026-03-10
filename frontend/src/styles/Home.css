@@ -786,11 +786,50 @@
 
 @media (max-width: 768px) {
     .hero-modern {
-        padding: 5rem 0;
+        min-height: auto;
+        aspect-ratio: 4/5;
+        padding: 4rem 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+    }
+
+    .hero-modern-bg {
+        object-fit: cover;
+        object-position: center top;
+    }
+
+    .hero-modern-overlay {
+        background: linear-gradient(to top,
+                rgba(0, 0, 0, 0.8) 0%,
+                rgba(0, 0, 0, 0.4) 40%,
+                rgba(0, 0, 0, 0.2) 100%);
     }
 
     .hero-modern-title {
-        font-size: 2.5rem;
+        font-size: 2.2rem;
+        text-align: center;
+    }
+
+    .hero-modern-mission {
+        font-size: 1.05rem;
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .hero-modern-actions {
+        justify-content: center;
+        gap: 0.8rem;
+    }
+
+    .hero-modern-content {
+        max-width: 100%;
+        padding: 0 1.5rem;
+    }
+
+    .hero-train-animation {
+        display: none;
+        /* Hide on small mobile to save space */
     }
 
     .events-grid,
