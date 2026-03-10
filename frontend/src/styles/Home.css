@@ -847,7 +847,8 @@
 
     .events-grid,
     .modern-cards-grid,
-    .committee-grid {
+    .committee-grid,
+    .committee-grid.dual {
         grid-template-columns: 1fr;
     }
 
@@ -881,6 +882,16 @@
     .event-modern-card {
         flex-direction: column;
         padding: 1.5rem;
+    }
+
+    .committee-card-detail {
+        padding: 2rem 1.5rem;
+        border-radius: 24px;
+    }
+
+    .committee-card-detail .img-wrap {
+        width: 130px;
+        height: 130px;
     }
 }
 
