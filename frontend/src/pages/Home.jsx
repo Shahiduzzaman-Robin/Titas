@@ -312,28 +312,50 @@ const Home = () => {
                         <div className="spotlight-content">
                             <div className="section-label light">Alumni Spotlight</div>
                             <h2 className="section-title text-white bn-text">আমাদের গর্ব</h2>
-                            <p className="section-desc text-light opacity-80 mb-6">
+                            <p className="section-desc spotlight-desc bn-text">
                                 ঢাকা বিশ্ববিদ্যালয় থেকে পড়াশোনা শেষে আমাদের ব্রাহ্মণবাড়িয়ার সন্তানেরা আজ দেশ-বিদেশের বিভিন্ন গুরুত্বপূর্ণ স্থানে নেতৃত্ব দিচ্ছেন। তাদের সাফল্য আমাদের অনুপ্রেরণা।
                             </p>
+                            <div className="spotlight-stats">
+                                <div className="spotlight-stat-item">
+                                    <span className="value">1200+</span>
+                                    <span className="label">Active Alumni</span>
+                                </div>
+                                <div className="spotlight-stat-item">
+                                    <span className="value">25+</span>
+                                    <span className="label">Public Leaders</span>
+                                </div>
+                                <div className="spotlight-stat-item">
+                                    <span className="value">40+</span>
+                                    <span className="label">Mentors</span>
+                                </div>
+                            </div>
                             <Link to="/students" className="btn-modern-primary white">
-                                <Award size={18} /> Explor Alumni Directory
+                                <Award size={18} /> Explore Alumni Directory
                             </Link>
                         </div>
                         <div className="spotlight-cards">
-                            <div className="spotlight-card glass-panel">
+                            <div className="spotlight-card spotlight-card-dark spotlight-card-featured">
                                 <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=200&q=80" alt="Alumni Placeholder" className="avatar" />
                                 <div className="info">
-                                    <h4>Dr. Abul Kalam</h4>
+                                    <div className="spotlight-meta-top">
+                                        <h4>Dr. Abul Kalam</h4>
+                                        <span className="spotlight-pill">Mentor</span>
+                                    </div>
                                     <p className="role">Professor, Dept of Physics</p>
                                     <p className="batch">Batch: '98</p>
+                                    <p className="summary">Leading research initiatives and mentoring first-generation university students.</p>
                                 </div>
                             </div>
-                            <div className="spotlight-card glass-panel">
+                            <div className="spotlight-card spotlight-card-dark">
                                 <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=200&q=80" alt="Alumni Placeholder" className="avatar" />
                                 <div className="info">
-                                    <h4>Farhana Yesmin</h4>
+                                    <div className="spotlight-meta-top">
+                                        <h4>Farhana Yesmin</h4>
+                                        <span className="spotlight-pill">Leader</span>
+                                    </div>
                                     <p className="role">Joint Secretary, GoB</p>
                                     <p className="batch">Batch: '01</p>
+                                    <p className="summary">Working on policy reform and supporting women-focused education programs.</p>
                                 </div>
                             </div>
                         </div>
