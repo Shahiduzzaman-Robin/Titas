@@ -1,0 +1,502 @@
+import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { UserPlus, Calendar, ArrowRight, BookOpen, Users, MapPin, Award, ExternalLink, AlertCircle, Quote } from 'lucide-react';
+import axios from 'axios';
+import { API_BASE_URL } from '../constants';
+import TrainAnimation from '../components/TrainAnimation';
+import ContactForm from '../components/ContactForm';
+import Footer from '../components/Footer';
+import '../styles/Home.css';
+
+const Home = () => {
+    const [latestPosts, setLatestPosts] = useState([]);
+    const [loadingPosts, setLoadingPosts] = useState(true);
+    const [notices, setNotices] = useState([]);
+
+    // States to handle the Executive Committee
+    const [president, setPresident] = useState(null);
+    const [secretary, setSecretary] = useState(null);
+    const [loadingCommittee, setLoadingCommittee] = useState(true);
+
+    useEffect(() => {
+        const fetchPosts = async () => {
+            try {
+                const res = await axios.get(`${API_BASE_URL}/api/blog/posts?limit=3`);
+                setLatestPosts(res.data.posts || []);
+            } catch (err) {
+                console.error('Failed to fetch latest posts', err);
+            } finally {
+                setLoadingPosts(false);
+            }
+        };
+
+        const fetchNotices = async () => {
+            try {
+                const res = await axios.get(`${API_BASE_URL}/api/notices`);
+                if (res.data.success) {
+                    setNotices(res.data.data);
+                }
+            } catch (err) {
+                console.error("Error fetching notices:", err);
+            }
+        };
+
+        fetchPosts();
+        fetchNotices();
+
+        const fetchCommittee = async () => {
+            try {
+                // Fetch all approved students to scan for President and Secretary designations
+                const res = await axios.get(`${API_BASE_URL}/api/students?status=approved`);
+                const students = res.data.students || [];
+
+                // Extract the exact President and Secretary using their explicitly known unique emails
+                const pres = students.find(s => s.email === 'rakibulhasan.du7480@gmail.com');
+                const sec = students.find(s => s.email === 'jannatt1610@gmail.com');
+
+                setPresident(pres);
+                setSecretary(sec);
+            } catch (err) {
+                console.error('Failed to fetch committee members', err);
+            } finally {
+                setLoadingCommittee(false);
+            }
+        };
+
+        fetchPosts();
+        fetchCommittee();
+    }, []);
+
+    const formatDate = (dateStr) => {
+        if (!dateStr) return '';
+        return new Date(dateStr).toLocaleDateString('en-GB', {
+            day: 'numeric', month: 'short', year: 'numeric'
+        });
+    };
+
+    return (
+        <div className="home-page-modern">
+
+            {/* 1. HERO SECTION */}
+            <section className="hero-modern" id="home">
+                <div className="hero-modern-overlay"></div>
+                {/* Fallback image of Dhaka University campus / curated aesthetic */}
+                <img
+                    src="https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=2000&q=80"
+                    alt="Dhaka University Campus"
+                    className="hero-modern-bg"
+                />
+
+                <div className="container hero-modern-content">
+                    <div className="hero-modern-badge glass-panel-dark">
+                        <MapPin size={16} />
+                        <span>Brahmanbaria to Dhaka University</span>
+                    </div>
+
+                    <TrainAnimation className="hero-train-animation" />
+
+                    <h1 className="hero-modern-title bn-text">
+                        তিতাস<br />
+                        <span className="text-gradient">কমিউনিটি হাব</span>
+                    </h1>
+
+                    <p className="hero-modern-mission bn-text">
+                        ঢাকা বিশ্ববিদ্যালয়ে অধ্যয়নরত ব্রাহ্মণবাড়িয়া জেলার শিক্ষার্থীদের মেধা, মনন ও ঐক্যের প্রতীক। আসুন, একসাথে একটি শক্তিশালী নেটওয়ার্ক গড়ে তুলি।
+                    </p>
+
+                    <div className="hero-modern-actions">
+                        <Link to="/register" className="btn-modern-primary bn-text">
+                            <UserPlus size={18} />
+                            <span>কমিউনিটিতে যোগ দিন</span>
+                        </Link>
+                        <a href="#events" className="btn-modern-secondary glass-panel bn-text">
+                            <Calendar size={18} />
+                            <span>ইভেন্ট দেখুন</span>
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            {/* ACTIVE NOTICE BOARD */}
+            <div className="notice-board-modern">
+                <div className="notice-label bn-text">
+                    <AlertCircle size={18} />
+                    জরুরী নোটিশ
+                </div>
+                <div className="notice-ticker">
+                    {notices.length > 0 ? notices.map((notice) => (
+                        <div key={notice._id} className="notice-item bn-text">
+                            {notice.priority === 'new' && <span className="badge-new">New</span>}
+                            {notice.priority === 'urgent' && <AlertCircle size={14} className="text-red-500" />}
+                            {notice.priority === 'normal' && <Calendar size={14} />}
+                            {notice.link ? (
+                                <a href={notice.link} target="_blank" rel="noreferrer" style={{ color: 'white', textDecoration: 'underline' }}>{notice.text}</a>
+                            ) : notice.text}
+                        </div>
+                    )) : (
+                        <div className="notice-item bn-text">তিতাস পরিবারে আপনাকে স্বাগতম! নিয়মিত আপডেটের জন্য আমাদের সাথেই থাকুন।</div>
+                    )}
+                </div>
+            </div>
+
+            {/* 2. ABOUT SECTION */}
+            <section className="about-modern" id="about">
+                <div className="container">
+                    <div className="about-modern-grid">
+                        <div className="about-modern-text">
+                            <div className="section-label">Our Mission</div>
+                            <h2 className="section-title bn-text">আমাদের সম্পর্কে</h2>
+                            <p className="section-desc bn-text">
+                                তিতাস – ঢাকা বিশ্ববিদ্যালয়স্থ ব্রাহ্মণবাড়িয়া জেলা ছাত্রকল্যাণ পরিষদ। এটি শুধুমাত্র একটি সংগঠন নয়, বরং ঢাকা বিশ্ববিদ্যালয়ে অধ্যয়নরত ব্রাহ্মণবাড়িয়া জেলার শিক্ষার্থীদের একটি পরিবার। আমাদের মূল লক্ষ্য শিক্ষার্থীদের মধ্যে ভ্রাতৃত্ববোধ, সহযোগিতা এবং নেতৃত্বের গুণাবলী বিকাশ করা।
+                            </p>
+                            <p className="section-desc bn-text">
+                                আমরা নিয়মিত নবীন বরণ, কৃতি শিক্ষার্থী সংবর্ধনা, রক্তদান কর্মসূচী, শীতবস্ত্র বিতরণসহ নানাবিধ সামাজিক ও সাংস্কৃতিক অনুষ্ঠানের আয়োজন করে থাকি।
+                            </p>
+
+                            <div className="about-stats">
+                                <div className="stat-box">
+                                    <h4 className="stat-number">৫০০+</h4>
+                                    <p className="stat-label">বর্তমান সদস্য</p>
+                                </div>
+                                <div className="stat-box">
+                                    <h4 className="stat-number">৫০+</h4>
+                                    <p className="stat-label">বার্ষিক ইভেন্ট</p>
+                                </div>
+                                <div className="stat-box">
+                                    <h4 className="stat-number">১৯৯৪</h4>
+                                    <p className="stat-label">প্রতিষ্ঠিত</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="about-modern-image">
+                            <div className="image-frame-glass">
+                                <img src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=800&q=80" alt="Students together" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* 3. ANNOUNCEMENTS & EVENTS SECTION */}
+            <section className="events-modern section-bg-light" id="events">
+                <div className="container">
+                    <div className="section-header-center">
+                        <div className="section-label">Updates</div>
+                        <h2 className="section-title bn-text">ইভেন্ট ও নোটিশ</h2>
+                        <p className="section-subtitle">Stay updated with the latest community happenings</p>
+                    </div>
+
+                    <div className="events-grid">
+                        {/* Dummy Upcoming Event */}
+                        <div className="event-modern-card glass-panel">
+                            <div className="event-date">
+                                <span className="day">১৫</span>
+                                <span className="month">এপ্রিল</span>
+                            </div>
+                            <div className="event-content">
+                                <h3 className="bn-text">নবীন বরণ ও ইফতার মাহফিল ২০২৪</h3>
+                                <p className="event-meta"><MapPin size={14} /> টিএসসি, ঢাকা বিশ্ববিদ্যালয়</p>
+                                <p className="event-desc">নতুন শিক্ষার্থীদের বরণ করে নিতে এবং পবিত্র রমজানের রহমত কামনায় আমাদের বাৎসরিক ইফতার আয়োজন।</p>
+                                <button className="btn-text-link mt-auto">Learn More <ArrowRight size={16} /></button>
+                            </div>
+                        </div>
+
+                        {/* Dummy Announcement */}
+                        <div className="event-modern-card glass-panel highlight">
+                            <div className="event-icon">
+                                <Users size={24} />
+                            </div>
+                            <div className="event-content">
+                                <div className="badge-new">New</div>
+                                <h3 className="bn-text">সদস্য সংগ্রহ চলছে</h3>
+                                <p className="event-meta"><Calendar size={14} /> Deadline: 30 April, 2024</p>
+                                <p className="event-desc">২০২৩-২৪ সেশনের নবীন শিক্ষার্থীদের তিতাস ডেটাবেজে তথ্য যুক্ত করার আহ্বান করা হচ্ছে।</p>
+                                <Link to="/register" className="btn-text-link mt-auto">Register Now <ArrowRight size={16} /></Link>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* 4. LATEST BLOG POSTS */}
+            <section className="blog-overview-modern" id="blog">
+                <div className="container">
+                    <div className="section-header-flex">
+                        <div>
+                            <div className="section-label">Stories & Articles</div>
+                            <h2 className="section-title bn-text">সাম্প্রতিক ব্লগ</h2>
+                        </div>
+                        <Link to="/blog" className="btn-outline-modern">View All Posts <ArrowRight size={16} /></Link>
+                    </div>
+
+                    {loadingPosts ? (
+                        <div className="loading-state">Loading posts...</div>
+                    ) : (
+                        <div className="modern-cards-grid">
+                            {latestPosts.map(post => (
+                                <Link to={`/blog/${post.slug}`} className="modern-blog-card" key={post._id}>
+                                    <div className="card-image-wrap">
+                                        <img
+                                            src={post.featuredImage ? `${API_BASE_URL}${post.featuredImage}` : 'https://images.unsplash.com/photo-1455390582262-044cdead27d8?auto=format&fit=crop&w=600&q=80'}
+                                            alt={post.title}
+                                        />
+                                        <div className="card-category">{post.category?.name || 'General'}</div>
+                                    </div>
+                                    <div className="card-body">
+                                        <h3 className="card-title line-clamp-2">{post.title}</h3>
+                                        <p className="card-excerpt line-clamp-2">{post.excerpt || 'Read the full story to learn more about this topic.'}</p>
+                                        <div className="card-footer">
+                                            <span className="card-author">{post.author}</span>
+                                            <span className="card-date">{formatDate(post.publishedAt)}</span>
+                                        </div>
+                                    </div>
+                                </Link>
+                            ))}
+                            {latestPosts.length === 0 && !loadingPosts && (
+                                <div className="empty-state">No stories published yet.</div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            </section>
+
+            {/* 5. ALUMNI SPOTLIGHT */}
+            <section className="spotlight-modern section-bg-dark">
+                <div className="container">
+                    <div className="spotlight-layout">
+                        <div className="spotlight-content">
+                            <div className="section-label light">Alumni Spotlight</div>
+                            <h2 className="section-title text-white bn-text">আমাদের গর্ব</h2>
+                            <p className="section-desc text-light opacity-80 mb-6">
+                                ঢাকা বিশ্ববিদ্যালয় থেকে পড়াশোনা শেষে আমাদের ব্রাহ্মণবাড়িয়ার সন্তানেরা আজ দেশ-বিদেশের বিভিন্ন গুরুত্বপূর্ণ স্থানে নেতৃত্ব দিচ্ছেন। তাদের সাফল্য আমাদের অনুপ্রেরণা।
+                            </p>
+                            <Link to="/students" className="btn-modern-primary white">
+                                <Award size={18} /> Explor Alumni Directory
+                            </Link>
+                        </div>
+                        <div className="spotlight-cards">
+                            <div className="spotlight-card glass-panel">
+                                <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=200&q=80" alt="Alumni Placeholder" className="avatar" />
+                                <div className="info">
+                                    <h4>Dr. Abul Kalam</h4>
+                                    <p className="role">Professor, Dept of Physics</p>
+                                    <p className="batch">Batch: '98</p>
+                                </div>
+                            </div>
+                            <div className="spotlight-card glass-panel">
+                                <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=200&q=80" alt="Alumni Placeholder" className="avatar" />
+                                <div className="info">
+                                    <h4>Farhana Yesmin</h4>
+                                    <p className="role">Joint Secretary, GoB</p>
+                                    <p className="batch">Batch: '01</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* STUDENT TESTIMONIALS */}
+            <section className="testimonials-modern">
+                <div className="container">
+                    <div className="section-header-center">
+                        <div className="section-label">Community Voices</div>
+                        <h2 className="section-title bn-text">শিক্ষার্থীদের মতামত</h2>
+                        <p className="section-subtitle">আমাদের পরিবারের সদস্যদের কিছু কথা</p>
+                    </div>
+
+                    <div className="testimonials-grid">
+                        <div className="testimonial-card">
+                            <div className="quote-icon"><Quote size={20} /></div>
+                            <p className="testimonial-text bn-text">
+                                "ভর্তি পরীক্ষার সময় ঢাকায় এসে থাকার জায়গা নিয়ে খুব চিন্তায় ছিলাম। তিতাসের বড় ভাইয়েরা নিজ দায়িত্বে মেসে থাকার ব্যবস্থা করে দিয়েছিলেন। এই ঋণ কখনো শোধ করার মতো নয়।"
+                            </p>
+                            <div className="testimonial-author">
+                                <div className="author-avatar"><img src="https://images.unsplash.com/photo-1544717302-de2939b7ef71?auto=format&fit=crop&w=100&q=80" alt="Student" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} /></div>
+                                <div className="author-info">
+                                    <h4 className="bn-text">আহমেদ ফয়সাল</h4>
+                                    <p className="bn-text">ম্যানেজমেন্ট স্টাডিজ (২য় বর্ষ), বাঞ্ছারামপুর</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="testimonial-card">
+                            <div className="quote-icon"><Quote size={20} /></div>
+                            <p className="testimonial-text bn-text">
+                                "নতুন পরিবেশে মানিয়ে নেওয়া সহজ ছিল না। কিন্তু তিতাসের ইভেন্টগুলো এবং বড় আপুদের গাইডলাইন আমাকে অনেক সাহসী করেছে। মনেই হয়নি যে আমি বাড়ির বাইরে আছি।"
+                            </p>
+                            <div className="testimonial-author">
+                                <div className="author-avatar"><img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=100&q=80" alt="Student" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} /></div>
+                                <div className="author-info">
+                                    <h4 className="bn-text">সাদিয়া আফরিন</h4>
+                                    <p className="bn-text">রাষ্ট্রবিজ্ঞান (৩য় বর্ষ), কসবা</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="testimonial-card">
+                            <div className="quote-icon"><Quote size={20} /></div>
+                            <p className="testimonial-text bn-text">
+                                "পরীক্ষার আগে নোটস জোগাড় করা থেকে শুরু করে যেকোনো দরকারে এই প্ল্যাটফর্মটিকে পাশে পেয়েছি সবসময়। তিতাস শুধু সংগঠন নয়, একটা ভরসার জায়গা।"
+                            </p>
+                            <div className="testimonial-author">
+                                <div className="author-avatar"><img src="https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=100&q=80" alt="Student" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} /></div>
+                                <div className="author-info">
+                                    <h4 className="bn-text">মোহাম্মদ তরিকুল</h4>
+                                    <p className="bn-text">আইন বিভাগ (৪র্থ বর্ষ), নবীনগর</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* 6. PHOTO GALLERY */}
+            <section className="gallery-modern" id="gallery">
+                <div className="container">
+                    <div className="section-header-center">
+                        <div className="section-label">Moments</div>
+                        <h2 className="section-title bn-text">ফটো গ্যালারি</h2>
+                        <p className="section-subtitle">Glimpses of our vibrant community life</p>
+                    </div>
+
+                    <div className="gallery-masonry">
+                        <div className="gallery-item large">
+                            <img src="https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=800&q=80" alt="Gallery 1" />
+                            <div className="gallery-overlay"><span>Cultural Event</span></div>
+                        </div>
+                        <div className="gallery-item">
+                            <img src="https://images.unsplash.com/photo-1529070538774-1843cb3265df?auto=format&fit=crop&w=600&q=80" alt="Gallery 2" />
+                            <div className="gallery-overlay"><span>Annual Picnic</span></div>
+                        </div>
+                        <div className="gallery-item">
+                            <img src="https://images.unsplash.com/photo-1491438590914-bc09fcaaf77a?auto=format&fit=crop&w=600&q=80" alt="Gallery 3" />
+                            <div className="gallery-overlay"><span>Sports Day</span></div>
+                        </div>
+                        <div className="gallery-item wide">
+                            <img src="https://images.unsplash.com/photo-1523580494863-6f3031224c94?auto=format&fit=crop&w=800&q=80" alt="Gallery 4" />
+                            <div className="gallery-overlay"><span>Blood Donation Camp</span></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* 7. EXECUTIVE COMMITTEE */}
+            <section className="committee-modern section-bg-light" id="committee">
+                <div className="container">
+                    <div className="section-header-center">
+                        <div className="section-label">Leadership</div>
+                        <h2 className="section-title bn-text">কার্যনির্বাহী সংসদ ২০২৪</h2>
+                    </div>
+
+                    <div className="committee-grid dual">
+                        {loadingCommittee ? (
+                            <div className="loading-state col-span-2">Loading committee members...</div>
+                        ) : (
+                            <>
+                                {/* PRESIDENT CARD */}
+                                <div className="committee-card-detail glass-panel text-center">
+                                    <div className="img-wrap">
+                                        <img
+                                            src={president?.profilePhoto ? `${API_BASE_URL}${president.profilePhoto}` : "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80"}
+                                            alt={president?.nameEn || "President"}
+                                        />
+                                    </div>
+                                    <h3 className="bn-text mt-4">{president?.nameEn || 'Shantonio'}</h3>
+                                    <p className="role text-primary font-medium">{president?.titasDesignation || 'সভাপতি'}</p>
+                                    <p className="dept text-muted text-sm mt-1">{president?.department || 'ঢাকা বিশ্ববিদ্যালয়'}</p>
+
+                                    <div className="writings-quote mt-6">
+                                        <p className="bn-text text-sm italic text-gray-600">
+                                            "তিতাস এমন একটি প্রাঙ্গণ যেখানে মেধা, মনন এবং ভ্রাতৃত্ববোধ একই সুতোয় গাঁথা। আমাদের এই পরিবার ঢাকা বিশ্ববিদ্যালয়ে অধ্যয়নরত ব্রাহ্মণবাড়িয়ার সকল শিক্ষার্থীর কল্যাণে কাজ করে যাচ্ছে।"
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {/* GENERAL SECRETARY CARD */}
+                                <div className="committee-card-detail glass-panel text-center">
+                                    <div className="img-wrap">
+                                        <img
+                                            src={secretary?.profilePhoto ? `${API_BASE_URL}${secretary.profilePhoto}` : "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=300&q=80"}
+                                            alt={secretary?.nameEn || "General Secretary"}
+                                        />
+                                    </div>
+                                    <h3 className="bn-text mt-4">{secretary?.nameEn || 'General Secretary'}</h3>
+                                    <p className="role text-primary font-medium">{secretary?.titasDesignation || 'সাধারণ সম্পাদক'}</p>
+                                    <p className="dept text-muted text-sm mt-1">{secretary?.department || 'ঢাকা বিশ্ববিদ্যালয়'}</p>
+
+                                    <div className="writings-quote mt-6">
+                                        <p className="bn-text text-sm italic text-gray-600">
+                                            "তিতাস শুধু একটি নাম নয়, এটি আমাদের আবেগ, ভালোবাসা এবং ঐক্যের প্রতীক। আসুন কাঁধে কাঁধ মিলিয়ে ব্রাহ্মণবাড়িয়ার মুখ উজ্জ্বল করি পৃথিবীর সবখানে।"
+                                        </p>
+                                    </div>
+                                </div>
+                            </>
+                        )}
+                    </div>
+                </div>
+            </section>
+
+            {/* FAQ SECTION */}
+            <section className="faq-modern section-bg-light" id="faq">
+                <div className="container">
+                    <div className="section-header-center">
+                        <div className="section-label">Questions?</div>
+                        <h2 className="section-title bn-text">সাধারণ জিজ্ঞাসা</h2>
+                        <p className="section-subtitle">নবীন শিক্ষার্থীদের মনে সাধারণত যেসব প্রশ্ন জাগে</p>
+                    </div>
+
+                    <div className="faq-list">
+                        <details className="faq-item">
+                            <summary className="bn-text">আমি কিভাবে তিতাসের সদস্য হতে পারি?</summary>
+                            <div className="faq-content bn-text">
+                                তিতাসের সদস্য হতে হলে আপনাকে অবশ্যই ঢাকা বিশ্ববিদ্যালয়ের রানিং শিক্ষার্থী হতে হবে এবং আপনার স্থায়ী ঠিকানা ব্রাহ্মণবাড়িয়া জেলায় হতে হবে। এই ওয়েবসাইটের 'কমিউনিটিতে যোগ দিন' বাটনে ক্লিক করে অনলাইনে আপনার তথ্য প্রদান করলেই যাচাই-বাছাই শেষে আপনি সদস্য পদ লাভ করবেন।
+                            </div>
+                        </details>
+
+                        <details className="faq-item">
+                            <summary className="bn-text">সংগঠনের সাধারণ সভা কখন হয়?</summary>
+                            <div className="faq-content bn-text">
+                                আমাদের একটি বাৎসরিক ক্যালেন্ডার রয়েছে। সাধারণত প্রতি মাসের প্রথম শুক্রবার টিএসসিতে আমাদের মিলিত আড্ডা বা সাধারণ সভার আয়োজন করা হয়ে থাকে। এছাড়া বিশেষ প্রয়োজন বা ইভেন্টের আগে জরুরি সভা আহ্বান করা হয়, যার নোটিশ ওয়েবসাইটে এবং ফেসবুক গ্রুপে জানানো হয়।
+                            </div>
+                        </details>
+
+                        <details className="faq-item">
+                            <summary className="bn-text">ক্যম্পাসে কোনো বিপদে পড়লে কার সাথে যোগাযোগ করবো?</summary>
+                            <div className="faq-content bn-text">
+                                যেকোনো জরুরি দরকারে আমাদের হেল্পলাইন নম্বর অথবা বর্তমান সভাপতি/সাধারণ সম্পাদকের সাথে সরাসরি যোগাযোগ করতে পারেন। তাঁদের নাম্বার ওয়েবসাইটের যোগাযোগ পৃষ্ঠায় দেয়া আছে। আমরা সবসময় বারিয়ার ভাই-বোনদের পাশে আছি।
+                            </div>
+                        </details>
+
+                        <details className="faq-item">
+                            <summary className="bn-text">এখানে কি স্কলারশিপ বা বৃত্তির কোনো ব্যবস্থা আছে?</summary>
+                            <div className="faq-content bn-text">
+                                তিতাসের সরাসরি নিজস্ব কোনো স্কলারশিপ নেই, তবে আমাদের অ্যালামনাই এসোসিয়েশনের পক্ষ থেকে অস্বচ্ছল ও মেধাবী শিক্ষার্থীদের জন্য বিভিন্ন সময় এককালীন অনুদান এবং বৃত্তির ব্যবস্থা করা হয়ে থাকে।
+                            </div>
+                        </details>
+                    </div>
+                </div>
+            </section>
+
+            {/* QUICK FOOTER CTA & CONTACT */}
+            <section className="home-contact-modern" id="contact" style={{ padding: '6rem 0', backgroundColor: '#f8fafc' }}>
+                <div className="container" style={{ maxWidth: '800px' }}>
+                    <div className="section-header-center mb-10">
+                        <div className="section-label">Get In Touch</div>
+                        <h2 className="section-title bn-text">আমাদের সাথে যোগাযোগ করুন</h2>
+                        <p className="section-subtitle">তিতাস সম্পর্কিত যেকোনো তথ্য, পরামর্শ বা মতামতের জন্য বার্তা পাঠান।</p>
+                    </div>
+
+                    <div className="home-active-form">
+                        <ContactForm />
+                    </div>
+                </div>
+            </section>
+
+            {/* GLOBAL FOOTER */}
+            <Footer />
+        </div>
+    );
+};
+
+export default Home;

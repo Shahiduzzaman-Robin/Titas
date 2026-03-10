@@ -1,0 +1,700 @@
+/* ===== ADMIN PANEL STYLES ===== */
+
+/* Admin Layout */
+.admin-layout {
+    min-height: 100vh;
+    background: #f1f5f9;
+    font-family: 'Hind Siliguri', 'Inter', sans-serif;
+}
+
+/* Admin Navbar */
+.admin-navbar {
+    background: #ffffff;
+    color: #1e293b;
+    padding: 0 1.5rem;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    border-bottom: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.admin-nav-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    color: #1e293b;
+}
+
+.admin-nav-logo-icon {
+    width: 42px;
+    height: 42px;
+    background: linear-gradient(135deg, #f0c040, #4caf80);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+}
+
+.admin-nav-logo h1 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    line-height: 1.2;
+    color: #1e293b;
+}
+
+.admin-nav-logo p {
+    font-size: 0.65rem;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.admin-nav-links {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    background: #f1f5f9;
+    /* Soft neutral capsule bg */
+    padding: 4px;
+    border-radius: 30px;
+    border: 1px solid #e2e8f0;
+}
+
+.admin-nav-link {
+    color: #64748b;
+    text-decoration: none;
+    font-size: 0.82rem;
+    padding: 0.5rem 1.25rem;
+    border-radius: 25px;
+    /* Pill shape */
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    white-space: nowrap;
+    font-weight: 500;
+}
+
+.admin-nav-link:hover {
+    color: #1e293b;
+}
+
+.admin-nav-link.active {
+    color: #1e293b;
+    background: #ffffff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    /* White pill active state */
+}
+
+.admin-nav-right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.admin-nav-user {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.admin-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.admin-user-info {
+    text-align: right;
+}
+
+.admin-user-info .name {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.admin-user-info .email {
+    font-size: 0.7rem;
+    color: #64748b;
+}
+
+/* Admin main content */
+.admin-main {
+    padding: 2rem 1.5rem;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* Page Header */
+.admin-page-header {
+    margin-bottom: 1.75rem;
+}
+
+.admin-page-header h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #1a1a2e;
+}
+
+.admin-page-header p {
+    color: #64748b;
+    font-size: 0.9rem;
+    margin-top: 0.25rem;
+}
+
+/* Stat Cards */
+.stat-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+@media (max-width: 1100px) {
+    .stat-cards-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 600px) {
+    .stat-cards-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.stat-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 1.25rem 1.5rem;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    transition: box-shadow 0.2s;
+}
+
+.stat-card:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.stat-card-label {
+    font-size: 0.8rem;
+    color: #64748b;
+    margin-bottom: 0.5rem;
+}
+
+.stat-card-value {
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 0.4rem;
+}
+
+.stat-card-sub {
+    font-size: 0.75rem;
+    color: #94a3b8;
+}
+
+.stat-card-sub a {
+    color: #94a3b8;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.stat-card-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+/* Demographics Grid */
+.demo-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+@media (max-width: 900px) {
+    .demo-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Admin Card */
+.admin-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+    margin-bottom: 1rem;
+}
+
+.admin-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.25rem;
+}
+
+.admin-card-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1a1a2e;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Gender chart */
+.gender-stats {
+    display: flex;
+    justify-content: space-around;
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.gender-stat-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+}
+
+.gender-stat-value.female {
+    color: #475569;
+}
+
+.gender-stat-value.male {
+    color: #1a1a2e;
+}
+
+.gender-stat-label {
+    font-size: 0.85rem;
+    color: #64748b;
+}
+
+.gender-bar-container {
+    margin-top: 0.5rem;
+}
+
+.gender-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+    font-size: 0.8rem;
+    color: #64748b;
+}
+
+.gender-bar {
+    height: 8px;
+    border-radius: 4px;
+    transition: width 0.5s;
+}
+
+.gender-bar.female {
+    background: #94a3b8;
+}
+
+.gender-bar.male {
+    background: #1a1a2e;
+}
+
+/* Blood group grid */
+.blood-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+}
+
+.blood-item {
+    border: 1px solid #f1f5f9;
+    border-radius: 8px;
+    padding: 0.6rem;
+    text-align: center;
+}
+
+.blood-item .bg-type {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #475569;
+}
+
+.blood-item .bg-count {
+    font-size: 0.75rem;
+    color: #64748b;
+    margin-top: 0.2rem;
+}
+
+/* Horizontal bar charts */
+.hbar-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.6rem;
+}
+
+.hbar-label {
+    width: 140px;
+    font-size: 0.82rem;
+    color: #475569;
+    flex-shrink: 0;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.hbar-track {
+    flex: 1;
+    height: 10px;
+    background: #f1f5f9;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.hbar-fill {
+    height: 100%;
+    border-radius: 5px;
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hbar-count {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #1a1a2e;
+    min-width: 28px;
+    text-align: right;
+}
+
+/* Quick actions */
+.quick-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.quick-action-btn {
+    flex: 1;
+    min-width: 140px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background: #fff;
+    cursor: pointer;
+    color: #475569;
+    font-size: 0.8rem;
+    transition: all 0.2s;
+}
+
+.quick-action-btn:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    transform: translateY(-2px);
+}
+
+/* ===== STUDENT LIST TABLE ===== */
+.admin-table-wrapper {
+    overflow-x: auto;
+}
+
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+}
+
+.admin-table th {
+    background: #f8fafc;
+    padding: 0.75rem 1rem;
+    text-align: left;
+    font-weight: 600;
+    color: #64748b;
+    border-bottom: 1px solid #e2e8f0;
+    white-space: nowrap;
+}
+
+.admin-table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #f1f5f9;
+    vertical-align: middle;
+    color: #1a1a2e;
+}
+
+.admin-table tr:hover td {
+    background: #f8fafc;
+}
+
+.student-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: #e2e8f0;
+}
+
+.student-avatar-placeholder {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    color: #94a3b8;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 0.25rem 0.65rem;
+    border-radius: 100px;
+    font-size: 0.72rem;
+    font-weight: 600;
+}
+
+.status-badge.approved {
+    background: #e2e8f0;
+    color: #1a1a2e;
+}
+
+.status-badge.pending {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.status-badge.rejected {
+    background: #f8fafc;
+    color: #64748b;
+}
+
+.action-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #64748b;
+    padding: 0.25rem;
+    border-radius: 4px;
+    transition: color 0.2s, background 0.2s;
+}
+
+.action-btn:hover {
+    color: #1a1a2e;
+    background: #f1f5f9;
+}
+
+/* Filters */
+.admin-filters {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    align-items: center;
+    padding: 1rem 1.25rem;
+    background: #f8fafc;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    margin-bottom: 1.25rem;
+}
+
+.admin-filter-select {
+    padding: 0.45rem 0.8rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    background: #fff;
+    color: #1a1a2e;
+    cursor: pointer;
+    min-width: 130px;
+}
+
+.admin-search-input {
+    padding: 0.45rem 0.8rem 0.45rem 2.25rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    background: #fff;
+    flex: 1;
+    min-width: 200px;
+}
+
+.admin-search-wrapper {
+    position: relative;
+    flex: 1;
+}
+
+.admin-search-wrapper .search-icon {
+    position: absolute;
+    left: 0.6rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+}
+
+/* Admin lang button */
+.admin-lang-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    padding: 0.3rem 0.75rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+/* Titas ID */
+.titas-id {
+    font-weight: 600;
+    color: #475569;
+    font-size: 0.8rem;
+}
+
+.student-name-bn {
+    font-weight: 600;
+    color: #1a1a2e;
+}
+
+.student-mobile {
+    font-size: 0.75rem;
+    color: #64748b;
+}
+
+.student-time {
+    font-size: 0.78rem;
+    color: #475569;
+}
+
+.student-time-sub {
+    font-size: 0.72rem;
+    color: #94a3b8;
+}
+
+.admin-image-preview {
+    width: min(420px, 100%);
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #f8fafc;
+}
+
+.admin-image-preview-img {
+    width: 100%;
+    max-height: 220px;
+    object-fit: cover;
+    display: block;
+}
+
+.admin-image-preview-text {
+    margin: 0;
+    padding: 0.55rem 0.7rem;
+    font-size: 0.8rem;
+    color: #475569;
+}
+
+.admin-blog-upload-wrap {
+    width: min(460px, 100%);
+}
+
+.admin-blog-upload-input {
+    display: none;
+}
+
+.admin-blog-upload-box {
+    display: block;
+    width: 100%;
+    border: 2px dashed #cbd5e1;
+    border-radius: 14px;
+    cursor: pointer;
+    background: #f8fafc;
+    transition: all 0.2s ease;
+    overflow: hidden;
+}
+
+.admin-blog-upload-box:hover {
+    border-color: #94a3b8;
+    background: #f1f5f9;
+}
+
+.admin-blog-upload-placeholder {
+    min-height: 140px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: #64748b;
+    gap: 0.3rem;
+    padding: 1rem;
+}
+
+.admin-blog-upload-placeholder p {
+    margin: 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #334155;
+}
+
+.admin-blog-upload-placeholder span {
+    font-size: 0.78rem;
+    color: #64748b;
+}
+
+.admin-blog-upload-preview {
+    position: relative;
+}
+
+.admin-blog-upload-image {
+    width: 100%;
+    max-height: 220px;
+    display: block;
+    object-fit: cover;
+}
+
+.admin-blog-upload-overlay {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15, 23, 42, 0.55);
+    color: #fff;
+    text-align: center;
+    font-size: 0.82rem;
+    padding: 0.45rem 0.55rem;
+}
+
+.admin-blog-upload-filename {
+    margin: 0.45rem 0 0;
+    font-size: 0.78rem;
+    color: #64748b;
+}
+
+.admin-inline-image-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    margin-bottom: 0.55rem;
+    flex-wrap: wrap;
+}
+
+.admin-inline-image-actions span {
+    color: #64748b;
+    font-size: 0.78rem;
+}
