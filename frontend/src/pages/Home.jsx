@@ -321,20 +321,23 @@ const Home = () => {
                                         <h3 className="bn-text">{event.title}</h3>
                                         <p className="event-meta"><MapPin size={14} /> {event.location}</p>
                                         <p className="event-desc line-clamp-2">{event.description}</p>
-                                        <div className="event-rsvp-stats en-text">
-                                            <span>Going: {event?.rsvpSummary?.going || 0}</span>
-                                            {Number(event?.rsvpSummary?.capacity || 0) > 0 && (
-                                                <span>Seats left: {event?.rsvpSummary?.seatsLeft ?? 0}</span>
-                                            )}
-                                        </div>
-                                        <button
-                                            type="button"
-                                            className="btn-rsvp"
-                                            onClick={() => openRsvpModal(event)}
-                                            disabled={event.rsvpEnabled === false}
-                                        >
-                                            {event.rsvpEnabled === false ? 'Registration বন্ধ' : (studentProfile ? 'Register' : 'Register Now')}
-                                        </button>
+                                        {event.rsvpEnabled !== false && (
+                                            <>
+                                                <div className="event-rsvp-stats en-text">
+                                                    <span>Going: {event?.rsvpSummary?.going || 0}</span>
+                                                    {Number(event?.rsvpSummary?.capacity || 0) > 0 && (
+                                                        <span>Seats left: {event?.rsvpSummary?.seatsLeft ?? 0}</span>
+                                                    )}
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    className="btn-rsvp"
+                                                    onClick={() => openRsvpModal(event)}
+                                                >
+                                                    {studentProfile ? 'Register' : 'Register Now'}
+                                                </button>
+                                            </>
+                                        )}
                                         {event.link ? (
                                             <a href={event.link} target="_blank" rel="noreferrer" className="btn-text-link mt-auto">Learn More <ArrowRight size={16} /></a>
                                         ) : (
