@@ -20,6 +20,7 @@ import AdminGallery from './pages/AdminGallery';
 import AdminEvents from './pages/AdminEvents';
 import AdminAuditLogs from './pages/AdminAuditLogs';
 import AdminNotifications from './pages/AdminNotifications';
+import AdminBlogComments from './pages/AdminBlogComments';
 import Contact from './pages/Contact';
 import Navbar from './components/Navbar';
 
@@ -87,6 +88,11 @@ function App() {
                         <Route path="/admin/blog" element={
                             <RequireAdminAuth allowedRoles={['Super Admin', 'Admin', 'Content Admin']}>
                                 <AdminBlog />
+                                    <Route path="/admin/blog-comments" element={
+                                        <RequireAdminAuth allowedRoles={['Super Admin', 'Admin', 'Content Admin']}>
+                                            <AdminBlogComments />
+                                        </RequireAdminAuth>
+                                    } />
                             </RequireAdminAuth>
                         } />
                         <Route path="/admin/messages" element={

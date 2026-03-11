@@ -14,6 +14,19 @@ const blogPostSchema = new mongoose.Schema(
         status: { type: String, enum: ['draft', 'published'], default: 'draft' },
         readingTime: { type: Number, default: 1 },
         publishedAt: { type: Date, default: null },
+        comments: [
+            {
+                id: { type: String, default: () => `comment-${Date.now()}-${Math.random().toString(36).substr(2, 9)}` },
+                name: { type: String, required: true, trim: true },
+                email: { type: String, default: '', trim: true },
+                text: { type: String, required: true, trim: true },
+                approved: { type: Boolean, default: true },
+                flagged: { type: Boolean, default: false },
+                flagReason: { type: String, default: '', trim: true },
+                createdAt: { type: Date, default: Date.now },
+                updatedAt: { type: Date, default: Date.now },
+            },
+        ],
     },
     { timestamps: true }
 );

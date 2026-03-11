@@ -19,6 +19,7 @@ const formatDate = (value) => {
 const Blog = () => {
     const [featuredPost, setFeaturedPost] = useState(null);
     const [posts, setPosts] = useState([]);
+    const [recentPosts, setRecentPosts] = useState([]);
     const [categories, setCategories] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('');
@@ -34,13 +35,17 @@ const Blog = () => {
     useEffect(() => {
         const fetchMeta = async () => {
             try {
-                const [categoryRes, featuredRes] = await Promise.all([
+                const [categoryRes, featuredRes, recentRes] = await Promise.all([
                     axios.get(`${API_BASE}/categories`),
                     axios.get(`${API_BASE}/posts/featured`),
+                    axios.get(`${API_BASE}/posts`, {
+                        params: { page: 1, limit: 5 },
+                    }),
                 ]);
 
                 setCategories(categoryRes.data || []);
                 setFeaturedPost(featuredRes.data || null);
+                setRecentPosts(recentRes.data?.posts || []);
             } catch (error) {
                 console.error('Failed to fetch blog metadata:', error);
             }
@@ -82,19 +87,17 @@ const Blog = () => {
 
     return (
         <div className="blog-page">
-            <section className="blog-hero container glass-panel">
-                <div>
-                    <p className="blog-kicker">Titas Community Hub</p>
-                    <h1 className="blog-title bn-text">কমিউনিটির গল্প, ঘোষণাপত্র আর শিক্ষার্থীদের অনুপ্রেরণা</h1>
-                    <p className="blog-subtitle bn-text">
-                        তিতাস ব্লগে পাবেন ইভেন্ট আপডেট, এলামনাই স্টোরি, ক্যারিয়ার গাইডলাইন এবং শিক্ষার্থীদের বিভিন্ন উদ্যোগের পূর্ণ কভারেজ।
-                    </p>
-                </div>
+            <section className="blog-hero container">
+                <p className="blog-kicker">Titas Community Blog</p>
+                <h1 className="blog-title">Thoughts, stories and updates from our community</h1>
+                <p className="blog-subtitle bn-text">
+                    শিক্ষার্থী জীবন, কমিউনিটি ইভেন্ট, ক্যারিয়ার গাইডলাইন এবং অনুপ্রেরণামূলক গল্প - সবকিছু এক জায়গায়।
+                </p>
             </section>
 
             {featuredPost && (
                 <section className="container featured-post-wrap">
-                    <article className="featured-post-card">
+                    <article className="featured-post-card modern-surface">
                         <div className="featured-image-wrapper">
                             <img
                                 src={featuredPost.featuredImage ? `${API_BASE_URL}${featuredPost.featuredImage}` : 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1200&q=80'}
@@ -109,79 +112,114 @@ const Blog = () => {
                             <div className="post-meta-row">
                                 <span><User size={14} /> {featuredPost.author}</span>
                                 <span><Calendar size={14} /> {formatDate(featuredPost.publishedAt)}</span>
-                                <span>{featuredPost.readingTime} min read</span>
                             </div>
-                            <Link to={`/blog/${featuredPost.slug}`} className="btn-primary">Read Featured Story</Link>
+                            <Link to={`/blog/${featuredPost.slug}`} className="read-more-btn">Read More</Link>
                         </div>
                     </article>
                 </section>
             )}
 
-            <section className="container blog-toolbar">
-                <div className="search-box glass-panel">
-                    <Search size={16} />
-                    <input
-                        type="text"
-                        placeholder="Search posts, stories, announcements..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                </div>
-                <div className="category-filter-scroll">
-                    <button
-                        className={`filter-chip ${selectedCategory === '' ? 'active' : ''}`}
-                        onClick={() => setSelectedCategory('')}
-                    >
-                        All
-                    </button>
-                    {categories.map((category) => (
-                        <button
-                            key={category._id}
-                            className={`filter-chip ${selectedCategory === category.slug ? 'active' : ''}`}
-                            onClick={() => setSelectedCategory(category.slug)}
-                        >
-                            {category.name}
-                        </button>
-                    ))}
-                </div>
-            </section>
-
-            <section className="container posts-grid-wrap">
-                <div className="posts-grid">
-                    {posts.map((post) => (
-                        <article key={post._id} className="blog-card glass-panel">
-                            <div className="blog-card-image-wrap">
-                                <img
-                                    src={post.featuredImage ? `${API_BASE_URL}${post.featuredImage}` : 'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&w=900&q=80'}
-                                    alt={post.title}
-                                    className="blog-card-image"
-                                />
-                            </div>
-                            <div className="blog-card-body">
-                                <span className="post-category-pill subtle">{post.category?.name || 'General'}</span>
-                                <h3>{post.title}</h3>
-                                <p>{post.excerpt}</p>
-                                <div className="post-meta-row compact">
-                                    <span>{post.author}</span>
-                                    <span>{formatDate(post.publishedAt)}</span>
-                                </div>
-                                <Link to={`/blog/${post.slug}`} className="read-more-link">Read More</Link>
-                            </div>
-                        </article>
-                    ))}
-                </div>
-
-                {!loading && posts.length === 0 && (
-                    <div className="empty-state">No blog posts found for the selected filter.</div>
-                )}
-
-                {hasMore && (
-                    <div className="load-more-wrap">
-                        <button className="btn-outline" onClick={() => setPage((p) => p + 1)} disabled={loading}>
-                            {loading ? 'Loading...' : 'Load More Posts'}
-                        </button>
+            <section className="container blog-layout">
+                <main className="blog-main">
+                    <div className="posts-headline-row">
+                        <h2>Latest Posts</h2>
+                        {selectedCategory && (
+                            <button className="clear-filter-btn" onClick={() => setSelectedCategory('')}>
+                                Clear Filter
+                            </button>
+                        )}
                     </div>
-                )}
+
+                    <div className="posts-grid">
+                        {posts.map((post) => (
+                            <article key={post._id} className="blog-card modern-surface">
+                                <div className="blog-card-image-wrap">
+                                    <img
+                                        src={post.featuredImage ? `${API_BASE_URL}${post.featuredImage}` : 'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&w=900&q=80'}
+                                        alt={post.title}
+                                        className="blog-card-image"
+                                    />
+                                </div>
+                                <div className="blog-card-body">
+                                    <span className="post-category-pill subtle">{post.category?.name || 'General'}</span>
+                                    <h3>{post.title}</h3>
+                                    <p>{post.excerpt}</p>
+                                    <div className="post-meta-row compact">
+                                        <span><User size={13} /> {post.author}</span>
+                                        <span><Calendar size={13} /> {formatDate(post.publishedAt)}</span>
+                                    </div>
+                                    <Link to={`/blog/${post.slug}`} className="read-more-btn">Read More</Link>
+                                </div>
+                            </article>
+                        ))}
+                    </div>
+
+                    {!loading && posts.length === 0 && (
+                        <div className="empty-state">No blog posts found for the selected filter.</div>
+                    )}
+
+                    {hasMore && (
+                        <div className="load-more-wrap">
+                            <button className="load-more-btn" onClick={() => setPage((p) => p + 1)} disabled={loading}>
+                                {loading ? 'Loading...' : 'Load More'}
+                            </button>
+                        </div>
+                    )}
+                </main>
+
+                <aside className="blog-sidebar">
+                    <div className="sidebar-card modern-surface">
+                        <h3>Search</h3>
+                        <div className="search-box">
+                            <Search size={16} />
+                            <input
+                                type="text"
+                                placeholder="Search posts..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="sidebar-card modern-surface">
+                        <h3>Categories</h3>
+                        <div className="category-list">
+                            <button
+                                className={`category-item ${selectedCategory === '' ? 'active' : ''}`}
+                                onClick={() => setSelectedCategory('')}
+                            >
+                                All Posts
+                            </button>
+                            {categories.map((category) => (
+                                <button
+                                    key={category._id}
+                                    className={`category-item ${selectedCategory === category.slug ? 'active' : ''}`}
+                                    onClick={() => setSelectedCategory(category.slug)}
+                                >
+                                    {category.name}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="sidebar-card modern-surface">
+                        <h3>Recent Posts</h3>
+                        <div className="recent-post-list">
+                            {recentPosts.map((post) => (
+                                <Link key={post._id} to={`/blog/${post.slug}`} className="recent-post-item">
+                                    <img
+                                        src={post.featuredImage ? `${API_BASE_URL}${post.featuredImage}` : 'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&w=240&q=80'}
+                                        alt={post.title}
+                                    />
+                                    <div>
+                                        <p>{post.title}</p>
+                                        <span>{formatDate(post.publishedAt)}</span>
+                                    </div>
+                                </Link>
+                            ))}
+                        </div>
+                    </div>
+                </aside>
             </section>
         </div>
     );

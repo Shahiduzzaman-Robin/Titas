@@ -80,6 +80,7 @@ export const AdminNavbar = ({ active }) => {
                     </Link>
                 )}
                 <Link to="/admin/blog" className={`admin-nav-link bn-text ${active === 'blog' ? 'active' : ''}`}>ব্লগ ম্যানেজমেন্ট</Link>
+                                <Link to="/admin/blog-comments" className={`admin-nav-link bn-text ${active === 'blog-comments' ? 'active' : ''}`}>ব্লগ মন্তব্য</Link>
                 {!isContentAdmin && (
                     <Link to="/admin/messages" className={`admin-nav-link bn-text ${active === 'messages' ? 'active' : ''}`} style={{ position: 'relative' }}>
                         বার্তাসমূহ

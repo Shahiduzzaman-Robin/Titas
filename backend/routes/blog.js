@@ -647,4 +647,310 @@ router.delete('/admin/tags/:id', protectAdmin, allowContentAdmin, async (req, re
     }
 });
 
+// Fetch comments for a blog post
+router.get('/posts/:slug/comments', async (req, res) => {
+    try {
+        const post = await BlogPost.findOne({ slug: req.params.slug }).select('comments');
+        if (!post) {
+            return res.status(404).json({ msg: 'Post not found' });
+        }
+        res.json({
+            comments: post.comments || [],
+            total: (post.comments || []).length,
+        });
+    } catch (error) {
+        res.status(500).json({ msg: error.message || 'Server Error' });
+    }
+});
+
+// Add a comment to a blog post
+router.post('/posts/:slug/comments', async (req, res) => {
+    try {
+        const { name, text, email = '' } = req.body;
+
+        if (!name || !name.trim()) {
+            return res.status(400).json({ msg: 'Name is required' });
+        }
+        if (!text || !text.trim()) {
+            return res.status(400).json({ msg: 'Comment text is required' });
+        }
+
+        const post = await BlogPost.findOne({ slug: req.params.slug });
+        if (!post) {
+            return res.status(404).json({ msg: 'Post not found' });
+        }
+
+        const newComment = {
+            id: `comment-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            name: name.trim(),
+            email: email.trim(),
+            text: text.trim(),
+            approved: true,
+            flagged: false,
+            flagReason: '',
+            createdAt: new Date(),
+            updatedAt: new Date(),
+        };
+
+        post.comments.push(newComment);
+        await post.save();
+
+        res.status(201).json({
+            msg: 'Comment added successfully',
+            comment: newComment,
+        });
+    } catch (error) {
+        res.status(500).json({ msg: error.message || 'Server Error' });
+    }
+});
+
+// ============================================================================
+// ADMIN COMMENT MANAGEMENT ENDPOINTS
+// ============================================================================
+
+// Get all comments for a specific post (admin)
+router.get('/admin/posts/:postId/comments', protectAdmin, allowContentAdmin, async (req, res) => {
+    try {
+        const { status = 'all' } = req.query;
+        const post = await BlogPost.findById(req.params.postId);
+        if (!post) {
+            return res.status(404).json({ msg: 'Post not found' });
+        }
+
+        let comments = post.comments || [];
+
+        if (status === 'pending') {
+            comments = comments.filter(c => !c.approved);
+        } else if (status === 'approved') {
+            comments = comments.filter(c => c.approved);
+        } else if (status === 'flagged') {
+            comments = comments.filter(c => c.flagged);
+        }
+
+        comments = comments.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+        res.json({
+            post: {
+                _id: post._id,
+                title: post.title,
+                slug: post.slug,
+            },
+            comments,
+            summary: {
+                total: post.comments?.length || 0,
+                approved: (post.comments || []).filter(c => c.approved).length,
+                pending: (post.comments || []).filter(c => !c.approved).length,
+                flagged: (post.comments || []).filter(c => c.flagged).length,
+            },
+        });
+    } catch (error) {
+        res.status(500).json({ msg: error.message || 'Server Error' });
+    }
+});
+
+// Get all comments across all posts (admin)
+router.get('/admin/comments', protectAdmin, allowContentAdmin, async (req, res) => {
+    try {
+        const { status = 'all', limit = 50, page = 1 } = req.query;
+        const pageNum = Math.max(1, parseInt(page, 10) || 1);
+        const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 50));
+
+        const pipeline = [
+            { $match: { comments: { $exists: true, $ne: [] } } },
+            { $unwind: '$comments' },
+        ];
+
+        if (status === 'pending') {
+            pipeline.push({ $match: { 'comments.approved': false } });
+        } else if (status === 'approved') {
+            pipeline.push({ $match: { 'comments.approved': true } });
+        } else if (status === 'flagged') {
+            pipeline.push({ $match: { 'comments.flagged': true } });
+        }
+
+        pipeline.push(
+            { $sort: { 'comments.createdAt': -1 } },
+            {
+                $project: {
+                    _id: 0,
+                    postId: '$_id',
+                    postTitle: '$title',
+                    postSlug: '$slug',
+                    comment: '$comments',
+                },
+            },
+            { $skip: (pageNum - 1) * limitNum },
+            { $limit: limitNum }
+        );
+
+        const comments = await BlogPost.aggregate(pipeline);
+
+        const totalPipeline = [
+            { $match: { comments: { $exists: true, $ne: [] } } },
+            { $unwind: '$comments' },
+        ];
+        if (status === 'pending') {
+            totalPipeline.push({ $match: { 'comments.approved': false } });
+        } else if (status === 'approved') {
+            totalPipeline.push({ $match: { 'comments.approved': true } });
+        } else if (status === 'flagged') {
+            totalPipeline.push({ $match: { 'comments.flagged': true } });
+        }
+        totalPipeline.push({ $count: 'total' });
+
+        const totalResult = await BlogPost.aggregate(totalPipeline);
+        const total = totalResult[0]?.total || 0;
+
+        res.json({
+            comments,
+            pagination: {
+                page: pageNum,
+                limit: limitNum,
+                total,
+                hasMore: pageNum * limitNum < total,
+            },
+        });
+    } catch (error) {
+        res.status(500).json({ msg: error.message || 'Server Error' });
+    }
+});
+
+// Delete a comment (admin)
+router.delete('/admin/posts/:postId/comments/:commentId', protectAdmin, allowContentAdmin, async (req, res) => {
+    try {
+        const post = await BlogPost.findById(req.params.postId);
+        if (!post) {
+            return res.status(404).json({ msg: 'Post not found' });
+        }
+
+        const commentIndex = post.comments.findIndex(c => c.id === req.params.commentId);
+        if (commentIndex === -1) {
+            return res.status(404).json({ msg: 'Comment not found' });
+        }
+
+        const deletedComment = post.comments[commentIndex];
+        post.comments.splice(commentIndex, 1);
+        await post.save();
+
+        await logAdminAction(req, {
+            module: 'blog',
+            action: 'delete_comment',
+            targetType: 'blog-comment',
+            targetId: req.params.commentId,
+            targetLabel: `Comment by ${deletedComment.name}`,
+            description: `Deleted comment on blog post "${post.title}"`,
+            details: {
+                postId: post._id,
+                postTitle: post.title,
+                authorName: deletedComment.name,
+                authorEmail: deletedComment.email,
+                text: deletedComment.text.substring(0, 100),
+                approved: deletedComment.approved,
+                flagged: deletedComment.flagged,
+            },
+        });
+
+        res.json({ msg: 'Comment deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ msg: error.message || 'Server Error' });
+    }
+});
+
+// Approve/unapprove a comment (admin)
+router.patch('/admin/posts/:postId/comments/:commentId/approve', protectAdmin, allowContentAdmin, async (req, res) => {
+    try {
+        const { approved } = req.body;
+
+        if (typeof approved !== 'boolean') {
+            return res.status(400).json({ msg: 'Approved field must be boolean' });
+        }
+
+        const post = await BlogPost.findById(req.params.postId);
+        if (!post) {
+            return res.status(404).json({ msg: 'Post not found' });
+        }
+
+        const comment = post.comments.find(c => c.id === req.params.commentId);
+        if (!comment) {
+            return res.status(404).json({ msg: 'Comment not found' });
+        }
+
+        const wasApproved = comment.approved;
+        comment.approved = approved;
+        comment.updatedAt = new Date();
+        await post.save();
+
+        await logAdminAction(req, {
+            module: 'blog',
+            action: 'update_comment_approval',
+            targetType: 'blog-comment',
+            targetId: req.params.commentId,
+            targetLabel: `Comment by ${comment.name}`,
+            description: `${approved ? 'Approved' : 'Unapproved'} comment on blog post "${post.title}"`,
+            details: {
+                postId: post._id,
+                postTitle: post.title,
+                before: { approved: wasApproved },
+                after: { approved },
+            },
+        });
+
+        res.json({
+            msg: `Comment ${approved ? 'approved' : 'unapproved'} successfully`,
+            comment,
+        });
+    } catch (error) {
+        res.status(500).json({ msg: error.message || 'Server Error' });
+    }
+});
+
+// Flag/unflag a comment (spam, inappropriate, etc.)
+router.patch('/admin/posts/:postId/comments/:commentId/flag', protectAdmin, allowContentAdmin, async (req, res) => {
+    try {
+        const { flagged, flagReason = '' } = req.body;
+
+        if (typeof flagged !== 'boolean') {
+            return res.status(400).json({ msg: 'Flagged field must be boolean' });
+        }
+
+        const post = await BlogPost.findById(req.params.postId);
+        if (!post) {
+            return res.status(404).json({ msg: 'Post not found' });
+        }
+
+        const comment = post.comments.find(c => c.id === req.params.commentId);
+        if (!comment) {
+            return res.status(404).json({ msg: 'Comment not found' });
+        }
+
+        const wasFlagged = comment.flagged;
+        comment.flagged = flagged;
+        comment.flagReason = flagged ? flagReason.trim() : '';
+        comment.updatedAt = new Date();
+        await post.save();
+
+        await logAdminAction(req, {
+            module: 'blog',
+            action: flagged ? 'flag_comment' : 'unflag_comment',
+            targetType: 'blog-comment',
+            targetId: req.params.commentId,
+            targetLabel: `Comment by ${comment.name}`,
+            description: `${flagged ? 'Flagged' : 'Unflagged'} comment on blog post "${post.title}"${flagged ? ` (Reason: ${flagReason})` : ''}`,
+            details: {
+                postId: post._id,
+                postTitle: post.title,
+                before: { flagged: wasFlagged, flagReason: comment.flagReason },
+                after: { flagged, flagReason },
+            },
+        });
+
+        res.json({
+            msg: `Comment ${flagged ? 'flagged' : 'unflagged'} successfully`,
+            comment,
+        });
+    } catch (error) {
+        res.status(500).json({ msg: error.message || 'Server Error' });
+    }
+});
+
 module.exports = router;
