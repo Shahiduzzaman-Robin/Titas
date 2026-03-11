@@ -49,9 +49,10 @@ const protectAdmin = async (req, res, next) => {
 // @access  Public
 router.post('/login', async (req, res) => {
     const { username, password } = req.body;
+    const normalizedUsername = String(username || '').trim();
 
     try {
-        const adminUser = await Admin.findOne({ username });
+        const adminUser = await Admin.findOne({ username: normalizedUsername });
 
         if (adminUser && (await adminUser.matchPassword(password))) {
             const token = jwt.sign({ id: adminUser._id }, process.env.JWT_SECRET || 'titas_secret_key', {

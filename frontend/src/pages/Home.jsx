@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { UserPlus, Calendar, ArrowRight, BookOpen, Users, MapPin, Award, ExternalLink, AlertCircle, Quote } from 'lucide-react';
+import { UserPlus, Calendar, ArrowRight, BookOpen, Users, MapPin, Award, ExternalLink, AlertCircle, Quote, X } from 'lucide-react';
 import axios from 'axios';
 import { API_BASE_URL } from '../constants';
 import TrainAnimation from '../components/TrainAnimation';
@@ -23,8 +23,22 @@ const Home = () => {
     // States for Events and Gallery
     const [events, setEvents] = useState([]);
     const [loadingEvents, setLoadingEvents] = useState(true);
+    const [rsvpModalOpen, setRsvpModalOpen] = useState(false);
+    const [selectedEvent, setSelectedEvent] = useState(null);
+    const [rsvpSubmitting, setRsvpSubmitting] = useState(false);
+    const [rsvpMessage, setRsvpMessage] = useState({ type: '', text: '' });
+    const [studentProfile, setStudentProfile] = useState(null);
+    const [rsvpForm, setRsvpForm] = useState({
+        fullName: '',
+        email: '',
+        phone: '',
+        department: '',
+        session: '',
+    });
     const [gallery, setGallery] = useState([]);
     const [loadingGallery, setLoadingGallery] = useState(true);
+
+    const normalizeRegistrationText = (text) => String(text || '').replace(/\bRSVP\b/gi, 'Registration');
 
     useEffect(() => {
         const fetchPosts = async () => {
@@ -102,6 +116,21 @@ const Home = () => {
         fetchCommittee();
         fetchEvents();
         fetchGallery();
+
+        const fetchStudentProfile = async () => {
+            const token = localStorage.getItem('titas_token');
+            if (!token) return;
+            try {
+                const res = await axios.get(`${API_BASE_URL}/api/students/me`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                setStudentProfile(res.data || null);
+            } catch (err) {
+                setStudentProfile(null);
+            }
+        };
+
+        fetchStudentProfile();
     }, []);
 
     const formatDate = (dateStr) => {
@@ -109,6 +138,61 @@ const Home = () => {
         return new Date(dateStr).toLocaleDateString('en-GB', {
             day: 'numeric', month: 'short', year: 'numeric'
         });
+    };
+
+    const openRsvpModal = (eventItem) => {
+        setSelectedEvent(eventItem);
+        setRsvpMessage({ type: '', text: '' });
+        setRsvpForm({
+            fullName: studentProfile?.nameBn || studentProfile?.nameEn || '',
+            email: studentProfile?.email || '',
+            phone: studentProfile?.mobile || '',
+            department: studentProfile?.department || '',
+            session: studentProfile?.session || '',
+        });
+        setRsvpModalOpen(true);
+    };
+
+    const handleRsvpSubmit = async (e) => {
+        e.preventDefault();
+        if (!selectedEvent?._id) return;
+        if (!studentProfile) {
+            setRsvpMessage({ type: 'error', text: 'রেজিস্টার করতে আগে ছাত্র অ্যাকাউন্টে লগইন করুন।' });
+            return;
+        }
+
+        setRsvpSubmitting(true);
+        setRsvpMessage({ type: '', text: '' });
+        try {
+            const token = localStorage.getItem('titas_token');
+            const config = token
+                ? { headers: { Authorization: `Bearer ${token}` } }
+                : undefined;
+            const { data } = await axios.post(
+                `${API_BASE_URL}/api/events/${selectedEvent._id}/rsvp`,
+                { ...rsvpForm, response: 'going' },
+                config
+            );
+            setRsvpMessage({
+                type: 'success',
+                text: normalizeRegistrationText(data.message || 'Registration submitted successfully.'),
+            });
+            setEvents((prev) => prev.map((item) => (
+                item._id === selectedEvent._id
+                    ? {
+                        ...item,
+                        rsvpSummary: data?.data?.summary || item.rsvpSummary,
+                    }
+                    : item
+            )));
+        } catch (err) {
+            setRsvpMessage({
+                type: 'error',
+                text: normalizeRegistrationText(err?.response?.data?.message || 'Unable to submit registration right now.'),
+            });
+        } finally {
+            setRsvpSubmitting(false);
+        }
     };
 
     return (
@@ -237,6 +321,20 @@ const Home = () => {
                                         <h3 className="bn-text">{event.title}</h3>
                                         <p className="event-meta"><MapPin size={14} /> {event.location}</p>
                                         <p className="event-desc line-clamp-2">{event.description}</p>
+                                        <div className="event-rsvp-stats en-text">
+                                            <span>Going: {event?.rsvpSummary?.going || 0}</span>
+                                            {Number(event?.rsvpSummary?.capacity || 0) > 0 && (
+                                                <span>Seats left: {event?.rsvpSummary?.seatsLeft ?? 0}</span>
+                                            )}
+                                        </div>
+                                        <button
+                                            type="button"
+                                            className="btn-rsvp"
+                                            onClick={() => openRsvpModal(event)}
+                                            disabled={event.rsvpEnabled === false}
+                                        >
+                                            {event.rsvpEnabled === false ? 'Registration বন্ধ' : (studentProfile ? 'Register' : 'Register Now')}
+                                        </button>
                                         {event.link ? (
                                             <a href={event.link} target="_blank" rel="noreferrer" className="btn-text-link mt-auto">Learn More <ArrowRight size={16} /></a>
                                         ) : (
@@ -605,6 +703,68 @@ const Home = () => {
 
             {/* GLOBAL FOOTER */}
             <Footer />
+
+            {rsvpModalOpen && selectedEvent && (
+                <div className="modal-overlay">
+                    <div className="modal-content glass-panel">
+                        <div className="modal-header">
+                            <h3 className="bn-text">ইভেন্ট রেজিস্ট্রেশন</h3>
+                            <button className="close-btn" onClick={() => setRsvpModalOpen(false)}>
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <p className="en-text text-muted" style={{ marginTop: '-1rem', marginBottom: '1rem' }}>
+                            {selectedEvent.title}
+                        </p>
+
+                        {rsvpMessage.text && (
+                            <div className={`rsvp-flash ${rsvpMessage.type === 'success' ? 'success' : 'error'}`}>
+                                {rsvpMessage.text}
+                            </div>
+                        )}
+
+                        <form onSubmit={handleRsvpSubmit} className="notice-form">
+                            {studentProfile ? (
+                                <div className="rsvp-profile-card">
+                                    <h4 className="bn-text">আপনার প্রোফাইল থেকে তথ্য নেওয়া হবে</h4>
+                                    <p className="en-text">Name: {studentProfile.nameBn || studentProfile.nameEn || '-'}</p>
+                                    <p className="en-text">Email: {studentProfile.email || '-'}</p>
+                                    <p className="en-text">Phone: {studentProfile.mobile || '-'}</p>
+                                    <p className="en-text">Department: {studentProfile.department || '-'}</p>
+                                    <p className="en-text">Session: {studentProfile.session || '-'}</p>
+                                </div>
+                            ) : (
+                                <div className="rsvp-profile-card">
+                                    <h4 className="bn-text">লগইন প্রয়োজন</h4>
+                                    <p className="bn-text">রেজিস্ট্রেশন ডেটা আপনার স্টুডেন্ট প্রোফাইল থেকে অটো-নেওয়া হবে। তাই আগে লগইন করুন।</p>
+                                    <div className="modal-actions" style={{ borderTop: 'none', paddingTop: '0.6rem', marginTop: '0.4rem' }}>
+                                        <Link to="/login" className="btn-modern-submit" onClick={() => setRsvpModalOpen(false)}>
+                                            Login as Student
+                                        </Link>
+                                    </div>
+                                </div>
+                            )}
+
+                            {studentProfile && (
+                                <>
+                                    <p className="en-text text-muted" style={{ marginTop: '0.7rem', marginBottom: '0.6rem' }}>
+                                        You are registering as <strong>Going</strong>.
+                                    </p>
+
+                                    <div className="modal-actions registration-actions">
+                                        <button type="button" className="btn-modern-secondary registration-cancel-btn" onClick={() => setRsvpModalOpen(false)}>
+                                            Cancel
+                                        </button>
+                                        <button type="submit" className="btn-modern-submit registration-confirm-btn" disabled={rsvpSubmitting}>
+                                            {rsvpSubmitting ? 'Submitting...' : 'Confirm Registration'}
+                                        </button>
+                                    </div>
+                                </>
+                            )}
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

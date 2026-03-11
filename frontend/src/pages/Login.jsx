@@ -16,12 +16,17 @@ const Login = () => {
 
     const navigate = useNavigate();
 
+    const getAdminLandingPath = (role) => (
+        role === 'Content Admin' ? '/admin/blog' : '/admin/dashboard'
+    );
+
     useEffect(() => {
         const adminToken = localStorage.getItem('admin_token');
         const studentToken = localStorage.getItem('titas_token');
+        const adminUser = JSON.parse(localStorage.getItem('admin_user') || '{}');
 
         if (adminToken) {
-            navigate('/admin/dashboard', { replace: true });
+            navigate(getAdminLandingPath(adminUser?.role), { replace: true });
         } else if (studentToken) {
             navigate('/profile', { replace: true });
         }
@@ -52,13 +57,13 @@ const Login = () => {
         // Step 2: Try Admin login (using emailOrMobile as username)
         try {
             const adminRes = await axios.post(`${API_BASE_URL}/api/admin/login`, {
-                username: formData.emailOrMobile,
+                username: formData.emailOrMobile.trim(),
                 password: formData.password
             });
             localStorage.setItem('admin_token', adminRes.data.token);
             localStorage.setItem('admin_user', JSON.stringify(adminRes.data));
             setDetectedRole('admin');
-            setTimeout(() => navigate('/admin/dashboard'), 800);
+            setTimeout(() => navigate(getAdminLandingPath(adminRes.data.role)), 800);
             return;
         } catch (adminErr) {
             // Both failed
