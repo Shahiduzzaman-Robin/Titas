@@ -103,17 +103,21 @@ const Blog = () => {
                                 src={featuredPost.featuredImage ? `${API_BASE_URL}${featuredPost.featuredImage}` : 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1200&q=80'}
                                 alt={featuredPost.title}
                                 className="featured-post-image"
+                                loading="lazy"
+                                decoding="async"
                             />
                         </div>
                         <div className="featured-post-content">
                             <span className="post-category-pill">{featuredPost.category?.name || 'General'}</span>
                             <h2>{featuredPost.title}</h2>
                             <p>{featuredPost.excerpt}</p>
-                            <div className="post-meta-row">
-                                <span><User size={14} /> {featuredPost.author}</span>
-                                <span><Calendar size={14} /> {formatDate(featuredPost.publishedAt)}</span>
+                            <div className="card-footer">
+                                <div className="post-meta-row">
+                                    <span><User size={14} /> {featuredPost.author}</span>
+                                    <span><Calendar size={14} /> {formatDate(featuredPost.publishedAt)}</span>
+                                </div>
+                                <Link to={`/blog/${featuredPost.slug}`} className="read-more-btn">Read More</Link>
                             </div>
-                            <Link to={`/blog/${featuredPost.slug}`} className="read-more-btn">Read More</Link>
                         </div>
                     </article>
                 </section>
@@ -138,17 +142,21 @@ const Blog = () => {
                                         src={post.featuredImage ? `${API_BASE_URL}${post.featuredImage}` : 'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&w=900&q=80'}
                                         alt={post.title}
                                         className="blog-card-image"
+                                        loading="lazy"
+                                        decoding="async"
                                     />
                                 </div>
                                 <div className="blog-card-body">
                                     <span className="post-category-pill subtle">{post.category?.name || 'General'}</span>
                                     <h3>{post.title}</h3>
                                     <p>{post.excerpt}</p>
-                                    <div className="post-meta-row compact">
-                                        <span><User size={13} /> {post.author}</span>
-                                        <span><Calendar size={13} /> {formatDate(post.publishedAt)}</span>
+                                    <div className="card-footer">
+                                        <div className="post-meta-row compact">
+                                            <span><User size={13} /> {post.author}</span>
+                                            <span><Calendar size={13} /> {formatDate(post.publishedAt)}</span>
+                                        </div>
+                                        <Link to={`/blog/${post.slug}`} className="read-more-btn">Read More</Link>
                                     </div>
-                                    <Link to={`/blog/${post.slug}`} className="read-more-btn">Read More</Link>
                                 </div>
                             </article>
                         ))}
@@ -210,6 +218,8 @@ const Blog = () => {
                                     <img
                                         src={post.featuredImage ? `${API_BASE_URL}${post.featuredImage}` : 'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&w=240&q=80'}
                                         alt={post.title}
+                                        loading="lazy"
+                                        decoding="async"
                                     />
                                     <div>
                                         <p>{post.title}</p>

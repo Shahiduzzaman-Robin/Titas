@@ -185,10 +185,12 @@ const BlogPost = () => {
                         </div>
 
                         <img
-                            src={post.featuredImage ? `${API_BASE_URL}${post.featuredImage}` : 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?auto=format&fit=crop&w=1400&q=80'}
-                            alt={post.title}
-                            className="blog-post-cover"
-                        />
+                                    src={post.featuredImage ? `${API_BASE_URL}${post.featuredImage}` : 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?auto=format&fit=crop&w=1400&q=80'}
+                                    alt={post.title}
+                                    className="blog-post-cover"
+                                    loading="lazy"
+                                    decoding="async"
+                                />
                     </header>
 
                     <section className="post-content-card modern-surface">
@@ -304,10 +306,12 @@ const BlogPost = () => {
                         {related.map((item) => (
                             <article key={item._id} className="blog-card modern-surface">
                                 <div className="blog-card-image-wrap">
-                                    <img
+                                        <img
                                         src={item.featuredImage ? `${API_BASE_URL}${item.featuredImage}` : 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=900&q=80'}
                                         alt={item.title}
                                         className="blog-card-image"
+                                        loading="lazy"
+                                        decoding="async"
                                     />
                                 </div>
                                 <div className="blog-card-body">
