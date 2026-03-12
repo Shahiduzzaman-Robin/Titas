@@ -159,6 +159,10 @@ router.post('/', upload.single('photo'), async (req, res) => {
             }
         }
 
+        if (!req.file) {
+            return res.status(400).json({ msg: 'নিবন্ধনের জন্য একটি প্রোফাইল ছবি আপলোড করা বাধ্যতামূলক।' });
+        }
+
         // Check if student already exists by Reg No, Mobile, or Email
         const duplicateCheck = await buildDuplicatePayload({ regNo, mobile, email });
         if (duplicateCheck.duplicates.regNo) {
@@ -188,7 +192,7 @@ router.post('/', upload.single('photo'), async (req, res) => {
             isEmployed: employedFlag,
             organization: employedFlag ? String(organization || '').trim() : '',
             jobTitle: employedFlag ? String(jobTitle || '').trim() : '',
-            photo: req.file ? `/uploads/${req.file.filename}` : null,
+            photo: `/uploads/${req.file.filename}`,
             password
         });
 

@@ -1,6 +1,7 @@
 const nodemailer = require('nodemailer');
 const Student = require('../models/Student');
 const NotificationSettings = require('../models/NotificationSettings');
+const EmailLog = require('../models/EmailLog');
 const fs = require('fs');
 const path = require('path');
 
@@ -229,12 +230,33 @@ const renderEmailLayout = ({ title, intro = '', contentHtml = '', badge = 'TITAS
         `;
 };
 
-const sendEmail = async ({ to, subject, text, html }) => {
+const logEmailAttempt = async ({ category, to, subject, result }) => {
+    if (!category) {
+        return;
+    }
+
+    try {
+        await EmailLog.create({
+            category,
+            status: result?.sent ? 'sent' : 'failed',
+            recipientEmail: String(to || '').trim().toLowerCase(),
+            subject: String(subject || '').trim(),
+            sentAt: new Date(),
+            failureReason: result?.sent ? '' : String(result?.reason || '').trim(),
+        });
+    } catch (error) {
+        console.error('Failed to save email log:', error.message);
+    }
+};
+
+const sendEmail = async ({ to, subject, text, html, category }) => {
     if (!to) return { sent: false, reason: 'missing-recipient' };
 
     const transporter = getTransporter();
     if (!transporter) {
-        return { sent: false, reason: 'smtp-not-configured' };
+        const result = { sent: false, reason: 'smtp-not-configured' };
+        await logEmailAttempt({ category, to, subject, result });
+        return result;
     }
 
     try {
@@ -247,10 +269,14 @@ const sendEmail = async ({ to, subject, text, html }) => {
             html,
             attachments: (getLogoSrc() === 'cid:titas-logo@titasdu' && logoAttachment) ? [logoAttachment] : [],
         });
-        return { sent: true };
+        const result = { sent: true };
+        await logEmailAttempt({ category, to, subject, result });
+        return result;
     } catch (error) {
         console.error('Email send failed:', error.message);
-        return { sent: false, reason: 'send-failed' };
+        const result = { sent: false, reason: 'send-failed' };
+        await logEmailAttempt({ category, to, subject, result });
+        return result;
     }
 };
 
@@ -413,7 +439,7 @@ const notifyStudentRegistrationStatus = async (student, status) => {
     }
 
     const { subject, text, html } = buildRegistrationStatusEmail(student, status);
-    return sendEmail({ to: student.email, subject, text, html });
+    return sendEmail({ to: student.email, subject, text, html, category: 'registrationStatus' });
 };
 
 const notifyProfileEditDecision = async (student, decision) => {
@@ -424,7 +450,7 @@ const notifyProfileEditDecision = async (student, decision) => {
     }
 
     const { subject, text, html } = buildProfileEditDecisionEmail(student, decision);
-    return sendEmail({ to: student.email, subject, text, html });
+    return sendEmail({ to: student.email, subject, text, html, category: 'profileEdit' });
 };
 
 const notifyStudentsAboutNewNotice = async (notice, options = {}) => {
@@ -470,7 +496,7 @@ const notifyStudentsAboutNewNotice = async (notice, options = {}) => {
     for (const student of recipients) {
         const { subject, text, html } = buildNoticePublishedEmail(notice);
 
-        const result = await sendEmail({ to: student.email, subject, text, html });
+        const result = await sendEmail({ to: student.email, subject, text, html, category: 'noticePublished' });
         if (result.sent) sentCount += 1;
     }
 
@@ -494,7 +520,7 @@ const notifyStudentsEventReminder = async (event) => {
     for (const student of recipients) {
         const { subject, text, html } = buildEventReminderEmail(event);
 
-        const result = await sendEmail({ to: student.email, subject, text, html });
+        const result = await sendEmail({ to: student.email, subject, text, html, category: 'eventReminders' });
         if (result.sent) sentCount += 1;
     }
 
@@ -507,7 +533,7 @@ const sendPasswordResetOtpEmail = async (student, otp) => {
     }
 
     const { subject, text, html } = buildPasswordResetOtpEmail(otp);
-    return sendEmail({ to: student?.email, subject, text, html });
+    return sendEmail({ to: student?.email, subject, text, html, category: 'passwordReset' });
 };
 
 const sendPasswordResetSuccessAlert = async (student) => {
@@ -516,7 +542,7 @@ const sendPasswordResetSuccessAlert = async (student) => {
     }
 
     const { subject, text, html } = buildPasswordResetSuccessEmail(student);
-    return sendEmail({ to: student?.email, subject, text, html });
+    return sendEmail({ to: student?.email, subject, text, html, category: 'passwordReset' });
 };
 
 const sendStudentLoginAlert = async (student, meta = {}) => {
@@ -525,7 +551,7 @@ const sendStudentLoginAlert = async (student, meta = {}) => {
     }
 
     const { subject, text, html } = buildLoginAlertEmail(student, meta);
-    return sendEmail({ to: student?.email, subject, text, html });
+    return sendEmail({ to: student?.email, subject, text, html, category: 'loginAlerts' });
 };
 
 const sendNotificationTestEmail = async (type, recipientEmail) => {
@@ -541,18 +567,18 @@ const sendNotificationTestEmail = async (type, recipientEmail) => {
     switch (type) {
         case 'registrationStatus': {
             const { subject, text, html } = buildRegistrationStatusEmail(sampleStudent, 'Approved');
-            return sendEmail({ to, subject, text, html });
+            return sendEmail({ to, subject, text, html, category: 'registrationStatus' });
         }
         case 'profileEdit': {
             const { subject, text, html } = buildProfileEditDecisionEmail(sampleStudent, 'Approved');
-            return sendEmail({ to, subject, text, html });
+            return sendEmail({ to, subject, text, html, category: 'profileEdit' });
         }
         case 'noticePublished': {
             const { subject, text, html } = buildNoticePublishedEmail({
                 text: 'এটি একটি টেস্ট নোটিশ। নতুন নোটিশ ইমেইল টেমপ্লেট যাচাই করার জন্য পাঠানো হয়েছে।',
                 link: 'https://titasdu.com/notices',
             });
-            return sendEmail({ to, subject, text, html });
+            return sendEmail({ to, subject, text, html, category: 'noticePublished' });
         }
         case 'eventReminders': {
             const { subject, text, html } = buildEventReminderEmail({
@@ -561,18 +587,18 @@ const sendNotificationTestEmail = async (type, recipientEmail) => {
                 location: 'ঢাকা বিশ্ববিদ্যালয় ক্যাম্পাস',
                 link: 'https://titasdu.com/events',
             });
-            return sendEmail({ to, subject, text, html });
+            return sendEmail({ to, subject, text, html, category: 'eventReminders' });
         }
         case 'passwordReset': {
             const { subject, text, html } = buildPasswordResetOtpEmail('123456');
-            return sendEmail({ to, subject, text, html });
+            return sendEmail({ to, subject, text, html, category: 'passwordReset' });
         }
         case 'loginAlerts': {
             const { subject, text, html } = buildLoginAlertEmail(sampleStudent, {
                 ipAddress: '203.0.113.15',
                 userAgent: 'Chrome on macOS',
             });
-            return sendEmail({ to, subject, text, html });
+            return sendEmail({ to, subject, text, html, category: 'loginAlerts' });
         }
         default:
             return { sent: false, reason: 'invalid-template-type' };

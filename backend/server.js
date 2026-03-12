@@ -50,7 +50,7 @@ app.use((req, res, next) => {
     });
     next();
 });
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads'), { maxAge: '7d' }));
 
 const escapeHtml = (value = '') =>
     String(value)

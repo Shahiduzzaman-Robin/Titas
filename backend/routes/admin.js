@@ -6,6 +6,13 @@ const { body, validationResult } = require('express-validator');
 const Admin = require('../models/Admin');
 const AuditLog = require('../models/AuditLog');
 const Student = require('../models/Student');
+const BlogPost = require('../models/BlogPost');
+const Event = require('../models/Event');
+const GalleryImage = require('../models/GalleryImage');
+const ContactMessage = require('../models/ContactMessage');
+const Notice = require('../models/Notice');
+const ProfileEdit = require('../models/ProfileEdit');
+const EmailLog = require('../models/EmailLog');
 const { logAdminAction } = require('../utils/auditLogger');
 const {
     DEFAULT_NOTIFICATION_SETTINGS,
@@ -724,13 +731,155 @@ router.get('/stats', protectAdmin, async (req, res) => {
         // Approval rate
         const approvalRate = total > 0 ? Math.round((approved / total) * 100) : 0;
 
+        // ==================== BLOG STATS ====================
+        const blogTotal = await BlogPost.countDocuments();
+        const blogPublished = await BlogPost.countDocuments({ status: 'published' });
+        const blogDraft = blogTotal - blogPublished;
+        const blogViewsAgg = await BlogPost.aggregate([{ $group: { _id: null, total: { $sum: '$views' } } }]);
+        const blogTotalViews = blogViewsAgg[0]?.total || 0;
+        const blogCommentsAgg = await BlogPost.aggregate([{ $project: { count: { $size: { $ifNull: ['$comments', []] } } } }, { $group: { _id: null, total: { $sum: '$count' } } }]);
+        const blogTotalComments = blogCommentsAgg[0]?.total || 0;
+        const blogFlaggedAgg = await BlogPost.aggregate([{ $unwind: '$comments' }, { $match: { 'comments.flagged': true } }, { $count: 'total' }]);
+        const blogFlaggedComments = blogFlaggedAgg[0]?.total || 0;
+
+        // ==================== EVENT STATS ====================
+        const now = new Date();
+        const eventTotal = await Event.countDocuments();
+        const eventUpcoming = await Event.countDocuments({ date: { $gte: now } });
+        const eventPast = eventTotal - eventUpcoming;
+        const eventRsvpAgg = await Event.aggregate([
+            { $project: { goingCount: { $size: { $filter: { input: { $ifNull: ['$rsvps', []] }, as: 'r', cond: { $eq: ['$$r.response', 'going'] } } } }, checkedIn: { $size: { $filter: { input: { $ifNull: ['$rsvps', []] }, as: 'r', cond: { $eq: ['$$r.attendanceStatus', 'checked_in'] } } } } } },
+            { $group: { _id: null, totalGoing: { $sum: '$goingCount' }, totalCheckedIn: { $sum: '$checkedIn' } } }
+        ]);
+        const eventTotalRsvps = eventRsvpAgg[0]?.totalGoing || 0;
+        const eventCheckedIn = eventRsvpAgg[0]?.totalCheckedIn || 0;
+
+        // ==================== GALLERY STATS ====================
+        const galleryTotal = await GalleryImage.countDocuments();
+        const galleryCategoriesAgg = await GalleryImage.distinct('category');
+        const galleryCategories = galleryCategoriesAgg.length;
+
+        // ==================== CONTACT MESSAGE STATS ====================
+        const msgTotal = await ContactMessage.countDocuments();
+        const msgUnread = await ContactMessage.countDocuments({ status: 'unread' });
+        const msgRead = await ContactMessage.countDocuments({ status: 'read' });
+        const msgReplied = await ContactMessage.countDocuments({ status: 'replied' });
+
+        // ==================== NOTICE STATS ====================
+        const noticeTotal = await Notice.countDocuments();
+        const noticeActive = await Notice.countDocuments({ isActive: true });
+        const noticeUrgent = await Notice.countDocuments({ priority: 'urgent', isActive: true });
+
+        // ==================== PROFILE EDIT STATS ====================
+        const editsPending = await ProfileEdit.countDocuments({ status: 'Pending' });
+        const editsTotal = await ProfileEdit.countDocuments();
+
+        // ==================== AUDIT LOG STATS ====================
+        const last24h = new Date(Date.now() - 24 * 60 * 60 * 1000);
+        const auditLast24h = await AuditLog.countDocuments({ createdAt: { $gte: last24h } });
+        const recentActivity = await AuditLog.find().sort({ createdAt: -1 }).limit(5).select('adminUsername module action description createdAt').lean();
+
+        // ==================== EMAIL SYSTEM STATUS ====================
+        const emailConfigured = isEmailConfigured();
+        const emailSummary = await EmailLog.aggregate([
+            {
+                $facet: {
+                    sentToday: [
+                        { $match: { status: 'sent', sentAt: { $gte: today } } },
+                        { $count: 'count' },
+                    ],
+                    sentThisMonth: [
+                        { $match: { status: 'sent', sentAt: { $gte: monthStart } } },
+                        { $count: 'count' },
+                    ],
+                    failedThisMonth: [
+                        { $match: { status: 'failed', sentAt: { $gte: monthStart } } },
+                        { $count: 'count' },
+                    ],
+                    lastSent: [
+                        { $match: { status: 'sent' } },
+                        { $sort: { sentAt: -1 } },
+                        { $limit: 1 },
+                        { $project: { _id: 0, sentAt: 1, category: 1 } },
+                    ],
+                    topCategory: [
+                        { $match: { status: 'sent', sentAt: { $gte: monthStart } } },
+                        { $group: { _id: '$category', count: { $sum: 1 } } },
+                        { $sort: { count: -1, _id: 1 } },
+                        { $limit: 1 },
+                        { $project: { _id: 0, category: '$_id', count: 1 } },
+                    ],
+                    byCategory: [
+                        { $match: { sentAt: { $gte: monthStart } } },
+                        {
+                            $group: {
+                                _id: { category: '$category', status: '$status' },
+                                count: { $sum: 1 },
+                            },
+                        },
+                        { $sort: { '_id.category': 1, '_id.status': 1 } },
+                    ],
+                    recent: [
+                        { $sort: { sentAt: -1 } },
+                        { $limit: 6 },
+                        {
+                            $project: {
+                                _id: 0,
+                                recipientEmail: 1,
+                                category: 1,
+                                status: 1,
+                                sentAt: 1,
+                            },
+                        },
+                    ],
+                },
+            },
+        ]);
+
+        const emailMetrics = emailSummary[0] || {};
+        const emailCategories = Object.keys(DEFAULT_NOTIFICATION_SETTINGS);
+        const emailCategoryMap = emailCategories.reduce((acc, category) => {
+            acc[category] = { category, sent: 0, failed: 0 };
+            return acc;
+        }, {});
+
+        (emailMetrics.byCategory || []).forEach((item) => {
+            const category = item?._id?.category;
+            const status = item?._id?.status;
+            if (!emailCategoryMap[category] || (status !== 'sent' && status !== 'failed')) {
+                return;
+            }
+
+            emailCategoryMap[category][status] = item.count || 0;
+        });
+
         res.json({
             total, approved, pending, rejected, todayCount, monthlyCount, lastMonthCount,
             withPhoto, approvalRate,
             males, females,
             bloodGroups, upazilas, halls, departments,
             activeSessions: sessions.length,
-            trend
+            trend,
+            // New platform metrics
+            blog: { total: blogTotal, published: blogPublished, draft: blogDraft, totalViews: blogTotalViews, totalComments: blogTotalComments, flaggedComments: blogFlaggedComments },
+            events: { total: eventTotal, upcoming: eventUpcoming, past: eventPast, totalRsvps: eventTotalRsvps, checkedIn: eventCheckedIn },
+            gallery: { total: galleryTotal, categories: galleryCategories },
+            messages: { total: msgTotal, unread: msgUnread, read: msgRead, replied: msgReplied },
+            notices: { total: noticeTotal, active: noticeActive, urgent: noticeUrgent },
+            profileEdits: { pending: editsPending, total: editsTotal },
+            audit: { last24h: auditLast24h, recentActivity },
+            email: {
+                sentToday: emailMetrics.sentToday?.[0]?.count || 0,
+                sentThisMonth: emailMetrics.sentThisMonth?.[0]?.count || 0,
+                failedThisMonth: emailMetrics.failedThisMonth?.[0]?.count || 0,
+                lastSentAt: emailMetrics.lastSent?.[0]?.sentAt || null,
+                lastSentCategory: emailMetrics.lastSent?.[0]?.category || '',
+                topCategory: emailMetrics.topCategory?.[0]?.category || '',
+                topCategoryCount: emailMetrics.topCategory?.[0]?.count || 0,
+                byCategory: emailCategories.map((category) => emailCategoryMap[category]),
+                recent: emailMetrics.recent || [],
+            },
+            emailConfigured,
         });
     } catch (err) {
         console.error(err);
@@ -803,7 +952,6 @@ router.put('/students/:id/status', protectAdmin, async (req, res) => {
 // =============================================================
 // PROFILE EDITS
 // =============================================================
-const ProfileEdit = require('../models/ProfileEdit');
 const fs = require('fs');
 const pathLib = require('path');
 

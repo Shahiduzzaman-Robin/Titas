@@ -82,7 +82,7 @@
 
 .featured-post-wrap {
   margin-top: 1rem;
-  margin-bottom: 5rem;
+  margin-bottom: 2.5rem;
 }
 
 .featured-post-card {
@@ -273,18 +273,12 @@
 .blog-sidebar {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 1.5rem;
 }
 
 .sidebar-card {
   padding: 1rem;
-}
-
-.sidebar-card h3 {
-  margin: 0 0 0.8rem;
-  font-family: 'Hind Siliguri', sans-serif;
-  font-size: 1.06rem;
-  color: #0f172a;
+  overflow: visible;
 }
 
 .search-box {
@@ -295,6 +289,8 @@
   background: #f8fafd;
   border-radius: 10px;
   padding: 0.62rem 0.75rem;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .search-box svg {

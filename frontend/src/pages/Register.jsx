@@ -154,6 +154,12 @@ const Register = () => {
             return;
         }
 
+        if (!photo) {
+            setLoading(false);
+            setMessage('নিবন্ধনের জন্য একটি প্রোফাইল ছবি আপলোড করা বাধ্যতামূলক।');
+            return;
+        }
+
         try {
             const duplicatePayload = await checkDuplicateFields({
                 regNo: formData.regNo?.trim(),
@@ -443,6 +449,7 @@ const Register = () => {
                                         type="file"
                                         accept="image/png, image/jpeg, image/jpg"
                                         onChange={handlePhotoChange}
+                                        required
                                         style={{ display: 'none' }}
                                     />
                                 </div>
