@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import axios from 'axios';
 import { API_BASE_URL } from '../constants';
@@ -48,6 +48,7 @@ const BlogPost = () => {
     const [commentForm, setCommentForm] = useState({ name: '', text: '' });
     const [loading, setLoading] = useState(true);
     const [submittingComment, setSubmittingComment] = useState(false);
+    const mainInputRef = useRef(null);
 
     useEffect(() => {
         const fetchPost = async () => {
@@ -145,34 +146,42 @@ const BlogPost = () => {
         },
     ];
 
-    const handleCommentSubmit = async (e) => {
-        e.preventDefault();
-        const name = commentForm.name.trim();
-        const text = commentForm.text.trim();
-        if (!name || !text) return;
-
+    const handleCommentSubmit = async ({ name, text }) => {
+        if (!text || !text.trim()) return null;
+        const author = (name && name.trim()) || 'You';
         setSubmittingComment(true);
         try {
             const res = await axios.post(`${API_BASE}/posts/${slug}/comments`, {
-                name,
+                name: author,
                 text,
             });
 
             const newComment = res.data?.comment || {
                 id: `comment-${Date.now()}`,
-                name,
+                name: author,
                 text,
                 createdAt: new Date().toISOString(),
                 likes: 0,
+                likedBy: [],
             };
 
             setComments((prev) => [newComment, ...prev]);
-            setCommentForm({ name: '', text: '' });
+            return newComment;
         } catch (error) {
             console.error('Failed to submit comment:', error);
-            alert(error.response?.data?.msg || 'Failed to post comment. Please try again.');
+            return null;
         } finally {
             setSubmittingComment(false);
+        }
+    };
+
+    const handlePost = async () => {
+        const el = mainInputRef.current;
+        const text = el?.innerText?.trim() || '';
+        if (!text) return;
+        const created = await handleCommentSubmit({ name: commentForm.name, text });
+        if (created) {
+            if (el) el.innerText = '';
         }
     };
 
@@ -196,17 +205,27 @@ const BlogPost = () => {
         if (!commentId) return;
         const clientId = getClientId();
         try {
+            // Optimistically toggle locally then notify server
+            setComments((prev) => prev.map((c) => {
+                const cid = c.id || c._id;
+                if (String(cid) !== String(commentId)) return c;
+                const likedBy = Array.isArray(c.likedBy) ? [...c.likedBy] : [];
+                const already = clientId && likedBy.includes(clientId);
+                if (already) {
+                    // unlike
+                    const idx = likedBy.indexOf(clientId);
+                    if (idx >= 0) likedBy.splice(idx, 1);
+                    return { ...c, likes: Math.max(0, (c.likes || 0) - 1), likedBy };
+                }
+                // like
+                likedBy.push(clientId);
+                return { ...c, likes: (c.likes || 0) + 1, likedBy };
+            }));
+
             const res = await axios.post(`${API_BASE}/posts/${slug}/comments`, { action: 'like', commentId, clientId });
-            const likes = res.data?.likes;
             const updatedComment = res.data?.comment;
             if (updatedComment) {
-                setComments((prev) => prev.map((c) => {
-                    const cid = c.id || c._id;
-                    if (String(cid) === String(commentId)) return { ...c, likes: updatedComment.likes, likedBy: updatedComment.likedBy || updatedComment.likedBy === null ? updatedComment.likedBy : c.likedBy };
-                    return c;
-                }));
-            } else if (typeof likes === 'number') {
-                setComments((prev) => prev.map((c) => (String(c.id || c._id) === String(commentId) ? { ...c, likes } : c)));
+                setComments((prev) => prev.map((c) => (String(c.id || c._id) === String(commentId) ? { ...c, likes: updatedComment.likes, likedBy: updatedComment.likedBy || [] } : c)));
             }
             // Persist local hint to quickly disable UI if server accepted the like
             try {
@@ -331,26 +350,39 @@ const BlogPost = () => {
                         <span>{comments.length} discussion{comments.length > 1 ? 's' : ''}</span>
                     </div>
 
-                    <form className="comment-form compact-input" onSubmit={handleCommentSubmit}>
-                        <div className="comment-input-row">
+                    <div className="comment-form compact-input">
+                        <div className="flex gap-2 mb-2 comment-input-row-outer">
                             <div className="comment-input-avatar">{String(commentForm.name || 'U').charAt(0).toUpperCase()}</div>
-                            <input
-                                type="text"
-                                value={commentForm.name}
-                                onChange={(e) => setCommentForm((prev) => ({ ...prev, name: e.target.value }))}
-                                placeholder="Write a comment..."
-                                className="comment-input-field"
-                            />
-                            <button type="submit" disabled={submittingComment} className="comment-input-post">
-                                {submittingComment ? 'Posting...' : 'Post'}
-                            </button>
+                            <div className="flex-1 bg-[#f0f2f5] rounded-2xl px-3 py-2">
+                                <div
+                                    ref={mainInputRef}
+                                    id="mainInput"
+                                    contentEditable
+                                    className="input-box outline-none text-[15px] min-h-[20px]"
+                                    data-placeholder="Write a comment..."
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' && !e.shiftKey) {
+                                            e.preventDefault();
+                                            handlePost();
+                                        }
+                                    }}
+                                />
+                                <div className="flex justify-between items-center mt-2 border-t border-gray-300 pt-2">
+                                    <div className="flex gap-3 text-gray-500 text-sm">
+                                        <span className="cursor-pointer hover:bg-gray-200 p-1 rounded">😊</span>
+                                        <span className="cursor-pointer hover:bg-gray-200 p-1 rounded">📷</span>
+                                        <span className="cursor-pointer hover:bg-gray-200 p-1 rounded">GIF</span>
+                                    </div>
+                                    <button
+                                        onClick={() => handlePost()}
+                                        className="text-[#1877f2] font-semibold text-sm px-2 py-1 hover:bg-blue-50 rounded transition"
+                                    >
+                                        Post
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                        <div className="comment-input-actions">
-                            <span className="ci-emoji">😊</span>
-                            <span className="ci-camera">📷</span>
-                            <span className="ci-gif">GIF</span>
-                        </div>
-                    </form>
+                    </div>
 
                     <div className="comment-list">
                         {comments.map((item) => {
