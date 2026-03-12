@@ -20,6 +20,8 @@ const blogPostSchema = new mongoose.Schema(
                 name: { type: String, required: true, trim: true },
                 email: { type: String, default: '', trim: true },
                 text: { type: String, required: true, trim: true },
+                likes: { type: Number, default: 0 },
+                likedBy: [{ type: String }],
                 approved: { type: Boolean, default: true },
                 flagged: { type: Boolean, default: false },
                 flagReason: { type: String, default: '', trim: true },

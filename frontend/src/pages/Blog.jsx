@@ -137,27 +137,29 @@ const Blog = () => {
                     <div className="posts-grid">
                         {posts.map((post) => (
                             <article key={post._id} className="blog-card modern-surface">
-                                <div className="blog-card-image-wrap">
-                                    <img
-                                        src={post.featuredImage ? `${API_BASE_URL}${post.featuredImage}` : 'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&w=900&q=80'}
-                                        alt={post.title}
-                                        className="blog-card-image"
-                                        loading="lazy"
-                                        decoding="async"
-                                    />
-                                </div>
-                                <div className="blog-card-body">
-                                    <span className="post-category-pill subtle">{post.category?.name || 'General'}</span>
-                                    <h3>{post.title}</h3>
-                                    <p>{post.excerpt}</p>
-                                    <div className="card-footer">
-                                        <div className="post-meta-row compact">
-                                            <span><User size={13} /> {post.author}</span>
-                                            <span><Calendar size={13} /> {formatDate(post.publishedAt)}</span>
-                                        </div>
-                                        <Link to={`/blog/${post.slug}`} className="read-more-btn">Read More</Link>
+                                <Link to={`/blog/${post.slug}`} className="card-link" aria-label={post.title}>
+                                    <div className="blog-card-image-wrap">
+                                        <img
+                                            src={post.featuredImage ? `${API_BASE_URL}${post.featuredImage}` : 'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&w=900&q=80'}
+                                            alt={post.title}
+                                            className="blog-card-image"
+                                            loading="lazy"
+                                            decoding="async"
+                                        />
                                     </div>
-                                </div>
+                                    <div className="blog-card-body">
+                                        <span className="post-category-pill subtle">{post.category?.name || 'General'}</span>
+                                        <h3>{post.title}</h3>
+                                        <p>{post.excerpt}</p>
+                                        <div className="card-footer">
+                                            <div className="post-meta-row compact">
+                                                <span><User size={13} /> {post.author}</span>
+                                                <span><Calendar size={13} /> {formatDate(post.publishedAt)}</span>
+                                            </div>
+                                            <span className="read-more-btn" aria-hidden>Read More</span>
+                                        </div>
+                                    </div>
+                                </Link>
                             </article>
                         ))}
                     </div>

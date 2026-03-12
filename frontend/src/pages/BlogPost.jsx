@@ -8,13 +8,19 @@ import '../styles/Blog.css';
 const API_BASE = `${API_BASE_URL}/api/blog`;
 const BACKEND_BASE = (import.meta.env.VITE_BACKEND_URL || API_BASE_URL).replace(/\/$/, '');
 
-const formatDate = (value) => {
+const formatDate = (value, withTime = false) => {
     if (!value) return 'Draft';
-    return new Date(value).toLocaleDateString('en-GB', {
-        day: '2-digit',
-        month: 'long',
-        year: 'numeric',
-    });
+    try {
+        const d = new Date(value);
+        if (withTime) {
+            return d.toLocaleString('en-GB', {
+                day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+            });
+        }
+        return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+    } catch (e) {
+        return String(value);
+    }
 };
 
 const BlogPost = () => {
@@ -141,6 +147,7 @@ const BlogPost = () => {
                 name,
                 text,
                 createdAt: new Date().toISOString(),
+                likes: 0,
             };
 
             setComments((prev) => [newComment, ...prev]);
@@ -152,6 +159,53 @@ const BlogPost = () => {
             setSubmittingComment(false);
         }
     };
+
+    const getClientId = () => {
+        try {
+            let id = localStorage.getItem('titas_client_id');
+            if (!id) {
+                id = `c_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+                localStorage.setItem('titas_client_id', id);
+            }
+            return id;
+        } catch (e) {
+            return null;
+        }
+    };
+
+    const clientId = getClientId();
+
+    const handleLike = async (commentIdOrObj) => {
+        const commentId = typeof commentIdOrObj === 'string' ? commentIdOrObj : (commentIdOrObj?.id || commentIdOrObj?._id);
+        if (!commentId) return;
+        const clientId = getClientId();
+        try {
+            const res = await axios.post(`${API_BASE}/posts/${slug}/comments`, { action: 'like', commentId, clientId });
+            const likes = res.data?.likes;
+            const updatedComment = res.data?.comment;
+            if (updatedComment) {
+                setComments((prev) => prev.map((c) => {
+                    const cid = c.id || c._id;
+                    if (String(cid) === String(commentId)) return { ...c, likes: updatedComment.likes, likedBy: updatedComment.likedBy || updatedComment.likedBy === null ? updatedComment.likedBy : c.likedBy };
+                    return c;
+                }));
+            } else if (typeof likes === 'number') {
+                setComments((prev) => prev.map((c) => (String(c.id || c._id) === String(commentId) ? { ...c, likes } : c)));
+            }
+            // Persist local hint to quickly disable UI if server accepted the like
+            try {
+                const likedSet = JSON.parse(localStorage.getItem('titas_liked_comments') || '[]');
+                if (!likedSet.includes(commentId)) {
+                    likedSet.push(commentId);
+                    localStorage.setItem('titas_liked_comments', JSON.stringify(likedSet));
+                }
+            } catch (e) {}
+        } catch (err) {
+            console.error('Like failed', err);
+        }
+    };
+
+    
 
     if (loading) {
         return <div className="container blog-post-feedback">Loading post...</div>;
@@ -281,14 +335,33 @@ const BlogPost = () => {
 
                     <div className="comment-list">
                         {comments.map((item) => (
-                            <article key={item.id} className="comment-item">
-                                <div className="comment-avatar">{String(item.name || 'U').charAt(0).toUpperCase()}</div>
-                                <div>
-                                    <div className="comment-meta">
-                                        <strong>{item.name}</strong>
-                                        <span>{formatDate(item.createdAt)}</span>
-                                    </div>
-                                    <p>{item.text}</p>
+                            <article key={item.id || item._id} className="comment-item fb-style">
+                                <div className="comment-left">
+                                    <div className="comment-avatar">{String(item.name || 'U').charAt(0).toUpperCase()}</div>
+                                </div>
+                                <div className="comment-main">
+                                    <span className="comment-author">{item.name}</span>
+                                    <span className="comment-text">{item.text}</span>
+                                    <span className="comment-meta">· {formatDate(item.createdAt, true)}</span>
+                                </div>
+                                <div className="comment-right">
+                                    <button
+                                        type="button"
+                                        className="like-btn"
+                                        onClick={() => handleLike(item)}
+                                        disabled={(() => {
+                                            try {
+                                                const likedLocal = JSON.parse(localStorage.getItem('titas_liked_comments') || '[]');
+                                                const likedByServer = item.likedBy || [];
+                                                return (clientId && likedByServer.includes(clientId)) || likedLocal.includes(item.id || item._id);
+                                            } catch (e) {
+                                                return false;
+                                            }
+                                        })()}
+                                    >
+                                        ♥
+                                    </button>
+                                    <span className="like-count">{item.likes || 0}</span>
                                 </div>
                             </article>
                         ))}

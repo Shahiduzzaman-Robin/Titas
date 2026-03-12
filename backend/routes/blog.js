@@ -666,7 +666,31 @@ router.get('/posts/:slug/comments', async (req, res) => {
 // Add a comment to a blog post
 router.post('/posts/:slug/comments', async (req, res) => {
     try {
-        const { name, text, email = '' } = req.body;
+        const { name, text, email = '', action, commentId } = req.body;
+
+        // If this is a like action routed to the same POST endpoint, handle it here
+        if (action === 'like' && commentId) {
+            const clientId = req.body.clientId || null;
+            const postForLike = await BlogPost.findOne({ slug: req.params.slug });
+            if (!postForLike) return res.status(404).json({ msg: 'Post not found' });
+
+            const commentForLike = postForLike.comments.find((c) => (c.id && String(c.id) === String(commentId)) || (c._id && String(c._id) === String(commentId)));
+            if (!commentForLike) return res.status(404).json({ msg: 'Comment not found' });
+
+            commentForLike.likedBy = commentForLike.likedBy || [];
+            if (clientId && commentForLike.likedBy.includes(String(clientId))) {
+                return res.json({ msg: 'Already liked', likes: commentForLike.likes || 0, comment: commentForLike });
+            }
+            if (clientId) commentForLike.likedBy.push(String(clientId));
+
+            commentForLike.likes = (commentForLike.likes || 0) + 1;
+            commentForLike.updatedAt = new Date();
+            await postForLike.save();
+
+            return res.json({ msg: 'Comment liked', likes: commentForLike.likes, comment: commentForLike });
+        }
+
+        // Otherwise proceed with adding a comment
 
         if (!name || !String(name).trim()) {
             return res.status(400).json({ msg: 'Name is required' });
@@ -691,6 +715,8 @@ router.post('/posts/:slug/comments', async (req, res) => {
             approved: true,
             flagged: false,
             flagReason: '',
+            likes: 0,
+            likedBy: [],
             createdAt: new Date(),
             updatedAt: new Date(),
         };
@@ -702,6 +728,57 @@ router.post('/posts/:slug/comments', async (req, res) => {
             msg: 'Comment added successfully',
             comment: newComment,
         });
+    } catch (error) {
+        res.status(500).json({ msg: error.message || 'Server Error' });
+    }
+});
+
+// Like a comment (increment likes)
+router.post('/posts/:slug/comments/:commentId/like', async (req, res) => {
+    try {
+        const clientId = req.body.clientId || req.query.clientId || null;
+        const post = await BlogPost.findOne({ slug: req.params.slug });
+        if (!post) return res.status(404).json({ msg: 'Post not found' });
+
+        const comment = post.comments.find((c) => (c.id && String(c.id) === String(req.params.commentId)) || (c._id && String(c._id) === String(req.params.commentId)));
+        if (!comment) return res.status(404).json({ msg: 'Comment not found' });
+
+        // If clientId provided, prevent duplicate likes
+        if (clientId) {
+            comment.likedBy = comment.likedBy || [];
+            if (comment.likedBy.includes(String(clientId))) {
+                return res.json({ msg: 'Already liked', likes: comment.likes || 0, comment });
+            }
+            comment.likedBy.push(String(clientId));
+        }
+
+        comment.likes = (comment.likes || 0) + 1;
+        comment.updatedAt = new Date();
+        await post.save();
+
+        res.json({ msg: 'Comment liked', likes: comment.likes, comment });
+    } catch (error) {
+        res.status(500).json({ msg: error.message || 'Server Error' });
+    }
+});
+
+// Like a comment (alternate: accept commentId in request body)
+router.post('/posts/:slug/comments/like', async (req, res) => {
+    try {
+        const { commentId } = req.body || {};
+        if (!commentId) return res.status(400).json({ msg: 'commentId is required' });
+
+        const post = await BlogPost.findOne({ slug: req.params.slug });
+        if (!post) return res.status(404).json({ msg: 'Post not found' });
+
+        const comment = post.comments.find((c) => (c.id && String(c.id) === String(commentId)) || (c._id && String(c._id) === String(commentId)));
+        if (!comment) return res.status(404).json({ msg: 'Comment not found' });
+
+        comment.likes = (comment.likes || 0) + 1;
+        comment.updatedAt = new Date();
+        await post.save();
+
+        res.json({ msg: 'Comment liked', likes: comment.likes, comment });
     } catch (error) {
         res.status(500).json({ msg: error.message || 'Server Error' });
     }
