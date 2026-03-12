@@ -23,6 +23,22 @@ const formatDate = (value, withTime = false) => {
     }
 };
 
+const timeAgo = (value) => {
+    if (!value) return '';
+    try {
+        const seconds = Math.floor((Date.now() - new Date(value).getTime()) / 1000);
+        if (seconds < 60) return `${seconds}s`;
+        const minutes = Math.floor(seconds / 60);
+        if (minutes < 60) return `${minutes}m`;
+        const hours = Math.floor(minutes / 60);
+        if (hours < 24) return `${hours}h`;
+        const days = Math.floor(hours / 24);
+        return `${days}d`;
+    } catch (e) {
+        return '';
+    }
+};
+
 const BlogPost = () => {
     const { slug } = useParams();
     const [post, setPost] = useState(null);
@@ -315,56 +331,66 @@ const BlogPost = () => {
                         <span>{comments.length} discussion{comments.length > 1 ? 's' : ''}</span>
                     </div>
 
-                    <form className="comment-form" onSubmit={handleCommentSubmit}>
-                        <input
-                            type="text"
-                            value={commentForm.name}
-                            onChange={(e) => setCommentForm((prev) => ({ ...prev, name: e.target.value }))}
-                            placeholder="Your name"
-                        />
-                        <textarea
-                            value={commentForm.text}
-                            onChange={(e) => setCommentForm((prev) => ({ ...prev, text: e.target.value }))}
-                            placeholder="Write a thoughtful comment..."
-                            rows={4}
-                        />
-                        <button type="submit" disabled={submittingComment}>
-                            {submittingComment ? 'Posting...' : 'Post Comment'}
-                        </button>
+                    <form className="comment-form compact-input" onSubmit={handleCommentSubmit}>
+                        <div className="comment-input-row">
+                            <div className="comment-input-avatar">{String(commentForm.name || 'U').charAt(0).toUpperCase()}</div>
+                            <input
+                                type="text"
+                                value={commentForm.name}
+                                onChange={(e) => setCommentForm((prev) => ({ ...prev, name: e.target.value }))}
+                                placeholder="Write a comment..."
+                                className="comment-input-field"
+                            />
+                            <button type="submit" disabled={submittingComment} className="comment-input-post">
+                                {submittingComment ? 'Posting...' : 'Post'}
+                            </button>
+                        </div>
+                        <div className="comment-input-actions">
+                            <span className="ci-emoji">😊</span>
+                            <span className="ci-camera">📷</span>
+                            <span className="ci-gif">GIF</span>
+                        </div>
                     </form>
 
                     <div className="comment-list">
-                        {comments.map((item) => (
-                            <article key={item.id || item._id} className="comment-item fb-style">
-                                <div className="comment-left">
-                                    <div className="comment-avatar">{String(item.name || 'U').charAt(0).toUpperCase()}</div>
-                                </div>
-                                <div className="comment-main">
-                                    <span className="comment-author">{item.name}</span>
-                                    <span className="comment-text">{item.text}</span>
-                                    <span className="comment-meta">· {formatDate(item.createdAt, true)}</span>
-                                </div>
-                                <div className="comment-right">
-                                    <button
-                                        type="button"
-                                        className="like-btn"
-                                        onClick={() => handleLike(item)}
-                                        disabled={(() => {
-                                            try {
-                                                const likedLocal = JSON.parse(localStorage.getItem('titas_liked_comments') || '[]');
-                                                const likedByServer = item.likedBy || [];
-                                                return (clientId && likedByServer.includes(clientId)) || likedLocal.includes(item.id || item._id);
-                                            } catch (e) {
-                                                return false;
-                                            }
-                                        })()}
-                                    >
-                                        ♥
-                                    </button>
-                                    <span className="like-count">{item.likes || 0}</span>
-                                </div>
-                            </article>
-                        ))}
+                        {comments.map((item) => {
+                            const cid = item.id || item._id;
+                            const likedByServer = item.likedBy || [];
+                            const isLiked = clientId && likedByServer.includes(clientId);
+                            return (
+                                <article key={cid} className="comment-item bubble">
+                                    <div className="comment-left">
+                                        <div className="comment-avatar">{String(item.name || 'U').charAt(0).toUpperCase()}</div>
+                                    </div>
+
+                                    <div className="comment-main">
+                                        <div className="comment-bubble">
+                                            <div className="comment-bubble-inner">
+                                                <div className="comment-bubble-header">
+                                                    <span className="comment-author">{item.name}</span>
+                                                </div>
+                                                <div className="comment-text">{item.text}</div>
+                                            </div>
+
+                                            <button
+                                                type="button"
+                                                className={`reaction-badge ${isLiked ? 'is-loved' : ''}`}
+                                                onClick={() => handleLike(item)}
+                                                aria-label="Like comment"
+                                            >
+                                                <span className="heart">♥</span>
+                                                <span className="reaction-count">{item.likes || 0}</span>
+                                            </button>
+                                        </div>
+
+                                        <div className="comment-meta-row">
+                                            <span className={`love-label ${isLiked ? 'is-loved' : ''}`}>{isLiked ? 'Loved' : 'Love'}</span>
+                                            <span className="comment-time">{timeAgo(item.createdAt)}</span>
+                                        </div>
+                                    </div>
+                                </article>
+                            );
+                        })}
                     </div>
                 </section>
             </div>
