@@ -864,8 +864,20 @@ body {
 .comment-input-row-outer { margin-bottom: 0.25rem; }
 
 .comment-bubble { background-color: #f0f2f5; border-radius: 18px; position: relative; }
-.like-badge { background: white; border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; align-items: center; padding: 2px 6px; position: absolute; right: -10px; bottom: -5px; font-size: 11px; color: #65676b; }
+.like-badge { background: #fff; border-radius: 12px; box-shadow: 0 8px 22px rgba(237,47,97,0.06); display: inline-flex; align-items: center; gap:6px; padding: 6px 8px; position: absolute; right: -14px; top: 8px; font-size: 13px; color: #111827; border: 1px solid rgba(237,47,97,0.06); }
+.like-badge .heart { color: #ef476f; font-size: 14px; }
+.like-badge.show { display: inline-flex; }
+.like-badge.hidden { display: none; }
 .loved { color: #f33e58 !important; font-weight: 700; }
+
+/* inset small square inside bubble */
+.comment-inset { display: inline-block; background: #eef6fa; border-radius: 10px; padding: 10px 12px; margin-top: 8px; color: #111827; font-size: 0.95rem; }
+
+/* Dark rectangular Post button to match target */
+.post-btn-dark { background: #0f172a; color: #fff; padding: 6px 10px; border-radius: 8px; font-weight: 700; border: none; }
+
+/* full width divider between comments */
+.comment-list > article + article { border-top: 1px solid #eef2f6; padding-top: 18px; margin-top: 18px; }
 
 .comment-form input,
 .comment-form textarea {

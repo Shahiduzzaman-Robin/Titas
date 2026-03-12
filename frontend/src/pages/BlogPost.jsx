@@ -298,29 +298,27 @@ const BlogPost = () => {
                                         <span key={tag._id} className="taxonomy-chip">#{tag.name}</span>
                                     ))}
                                 </div>
-                            )}
-                        </div>
+                                                <div className="comment-bubble px-3 py-2">
+                                                    <div className="comment-bubble-header">
+                                                        <span className="comment-author">{item.name}</span>
+                                                    </div>
+                                                    <div className="comment-inset">{item.text}</div>
 
-                        <div className="share-wrap">
-                            <h4>Share this article</h4>
-                            <div className="share-buttons">
-                                {shareLinks.map((item) => (
-                                    <button key={item.label} onClick={() => window.open(item.href, '_blank', 'noopener,noreferrer')}>
-                                        {item.icon}
-                                        {item.label}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
+                                                    <button
+                                                        type="button"
+                                                        className={`like-badge ${isLiked ? 'show' : ''}`}
+                                                        onClick={() => handleLike(item)}
+                                                        aria-label="Like comment"
+                                                    >
+                                                        <span className="heart">❤️</span>
+                                                        <span className="like-count">{item.likes || 0}</span>
+                                                    </button>
+                                                </div>
 
-                        <div className="author-box modern-surface">
-                            <div className="author-avatar">{authorInitial}</div>
-                            <div>
-                                <p className="author-label">Written by</p>
-                                <h4>{post.author}</h4>
-                                <p>
-                                    {post.author} shares insights, updates, and practical perspectives to support students and community members.
-                                </p>
+                                                <div className="comment-meta-row">
+                                                    <span className={`love-label ${isLiked ? 'is-loved' : ''}`}>{isLiked ? 'Loved' : 'Love'}</span>
+                                                    <span className="comment-time">{timeAgo(item.createdAt)}</span>
+                                                </div>
                             </div>
                         </div>
                     </section>
