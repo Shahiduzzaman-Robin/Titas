@@ -6,7 +6,7 @@ import logo from '../assets/logo.png';
 import { API_BASE_URL } from '../constants';
 import '../styles/Navbar.css';
 
-const Navbar = () => {
+const Navbar = ({ compact = false }) => {
     const location = useLocation();
     const navigate = useNavigate();
     const isBlogPath = location.pathname === '/blog' || location.pathname.startsWith('/blog/');
@@ -68,13 +68,15 @@ const Navbar = () => {
     };
 
     return (
-        <nav className="navbar">
+        <nav className={`navbar ${compact ? 'navbar-compact' : ''}`}>
             <div className="container flex-between nav-content">
                 <Link to="/" className="logo-group">
                     <img src={logo} alt="Titas Logo" className="logo-img" />
                     <div className="logo-text">
                         <h1 className="bn-text">তিতাস</h1>
-                        <p className="bn-text subtitle">ঢাকা বিশ্ববিদ্যালয়স্থ ব্রাহ্মণবাড়িয়া জেলা ছাত্রকল্যাণ পরিষদ</p>
+                        {!compact && (
+                            <p className="bn-text subtitle">ঢাকা বিশ্ববিদ্যালয়স্থ ব্রাহ্মণবাড়িয়া জেলা ছাত্রকল্যাণ পরিষদ</p>
+                        )}
                     </div>
                 </Link>
 
@@ -83,20 +85,9 @@ const Navbar = () => {
                         <Link to="/" className={`nav-link bn-text ${isHome ? 'active' : ''}`}>হোম</Link>
                         <Link to="/register" className={`nav-link bn-text ${location.pathname === '/register' ? 'active' : ''}`}>নিবন্ধন</Link>
                         <Link to="/students" className={`nav-link bn-text ${location.pathname === '/students' ? 'active' : ''}`}>শিক্ষার্থী</Link>
-                        {isHome ? (
-                            <>
-                                <a href="#events" onClick={(e) => scrollToSection(e, 'events')} className="nav-link bn-text">ইভেন্ট</a>
-                                <a href="#gallery" onClick={(e) => scrollToSection(e, 'gallery')} className="nav-link bn-text">গ্যালারি</a>
-                                <Link to="/contact" className={`nav-link bn-text ${location.pathname === '/contact' ? 'active' : ''}`}>যোগাযোগ</Link>
-                            </>
-                        ) : (
-                            <>
-                                <Link to="/#events" className="nav-link bn-text">ইভেন্ট</Link>
-                                <Link to="/#gallery" className="nav-link bn-text">গ্যালারি</Link>
-                                <Link to="/contact" className={`nav-link bn-text ${location.pathname === '/contact' ? 'active' : ''}`}>যোগাযোগ</Link>
-                            </>
-                        )}
+                        <Link to="/contact" className={`nav-link bn-text ${location.pathname === '/contact' ? 'active' : ''}`}>যোগাযোগ</Link>
                         <Link to="/blog" className={`nav-link bn-text ${isBlogPath ? 'active' : ''}`}>ব্লগ</Link>
+                        <Link to="/about" className={`nav-link bn-text ${location.pathname === '/about' ? 'active' : ''}`}>আমাদের সম্পর্কে</Link>
                     </div>
 
                     <div className="nav-buttons">

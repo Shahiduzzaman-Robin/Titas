@@ -668,12 +668,15 @@ router.post('/posts/:slug/comments', async (req, res) => {
     try {
         const { name, text, email = '' } = req.body;
 
-        if (!name || !name.trim()) {
+        if (!name || !String(name).trim()) {
             return res.status(400).json({ msg: 'Name is required' });
         }
-        if (!text || !text.trim()) {
+        if (!text || !String(text).trim()) {
             return res.status(400).json({ msg: 'Comment text is required' });
         }
+
+        // Sanitize inputs to prevent XSS
+        const sanitize = (str) => String(str).replace(/[<>]/g, '');
 
         const post = await BlogPost.findOne({ slug: req.params.slug });
         if (!post) {
@@ -682,9 +685,9 @@ router.post('/posts/:slug/comments', async (req, res) => {
 
         const newComment = {
             id: `comment-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-            name: name.trim(),
-            email: email.trim(),
-            text: text.trim(),
+            name: sanitize(name).trim(),
+            email: sanitize(email).trim(),
+            text: sanitize(text).trim(),
             approved: true,
             flagged: false,
             flagReason: '',

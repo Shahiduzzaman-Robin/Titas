@@ -8,6 +8,15 @@ import '../styles/Admin.css';
 
 const API = `${API_BASE_URL}/api/blog`;
 
+const getErrorMessage = (error, fallback) => {
+    return (
+        error?.response?.data?.msg ||
+        error?.response?.data?.message ||
+        error?.message ||
+        fallback
+    );
+};
+
 const AdminBlogComments = () => {
     const navigate = useNavigate();
     const [comments, setComments] = useState([]);
@@ -21,7 +30,12 @@ const AdminBlogComments = () => {
     const [authError, setAuthError] = useState('');
     const [expandedComment, setExpandedComment] = useState(null);
 
-    const adminUser = JSON.parse(localStorage.getItem('admin_user') || '{}');
+    let adminUser = {};
+    try {
+        adminUser = JSON.parse(localStorage.getItem('admin_user') || '{}');
+    } catch (error) {
+        adminUser = {};
+    }
     const token = localStorage.getItem('admin_token') || adminUser?.token || '';
 
     useEffect(() => {
@@ -56,7 +70,14 @@ const AdminBlogComments = () => {
             setSelectedComments(new Set());
         } catch (error) {
             console.error('Error fetching comments:', error);
-            setAuthError(error.response?.data?.msg || 'Failed to fetch comments');
+            const status = error?.response?.status;
+            if (status === 401 || status === 403) {
+                localStorage.removeItem('admin_token');
+                localStorage.removeItem('admin_user');
+                navigate('/login');
+                return;
+            }
+            setAuthError(getErrorMessage(error, 'Failed to fetch comments'));
         } finally {
             setLoading(false);
         }
@@ -65,11 +86,15 @@ const AdminBlogComments = () => {
     useEffect(() => {
         const filtered = comments.filter((item) => {
             const searchLower = searchTerm.toLowerCase();
+            const name = String(item.comment?.name || '').toLowerCase();
+            const email = String(item.comment?.email || '').toLowerCase();
+            const text = String(item.comment?.text || '').toLowerCase();
+            const postTitle = String(item.postTitle || '').toLowerCase();
             return (
-                item.comment?.name?.toLowerCase().includes(searchLower) ||
-                item.comment?.email?.toLowerCase().includes(searchLower) ||
-                item.comment?.text?.toLowerCase().includes(searchLower) ||
-                item.postTitle?.toLowerCase().includes(searchLower)
+                name.includes(searchLower) ||
+                email.includes(searchLower) ||
+                text.includes(searchLower) ||
+                postTitle.includes(searchLower)
             );
         });
         setFilteredComments(filtered);
@@ -84,7 +109,7 @@ const AdminBlogComments = () => {
             fetchComments();
         } catch (error) {
             console.error('Error deleting comment:', error);
-            setAuthError(error.response?.data?.msg || 'Failed to delete comment');
+            setAuthError(getErrorMessage(error, 'Failed to delete comment'));
         } finally {
             setActionInProgress(false);
         }
@@ -101,27 +126,30 @@ const AdminBlogComments = () => {
             fetchComments();
         } catch (error) {
             console.error('Error updating approval status:', error);
-            setAuthError(error.response?.data?.msg || 'Failed to update comment');
+            setAuthError(getErrorMessage(error, 'Failed to update comment'));
         } finally {
             setActionInProgress(false);
         }
     };
 
-    const flagComment = async (postId, commentId, flagged, reason = '') => {
-        const flagReason = flagged ? prompt('Enter reason for flagging (spam, inappropriate, etc.):') || '' : '';
-        if (flagged && !flagReason) return;
+    const flagComment = async (postId, commentId, flagged) => {
+        let flagReason = '';
+        if (!flagged) {
+            flagReason = prompt('Enter reason for flagging (spam, inappropriate, etc.):') || '';
+            if (!flagReason.trim()) return;
+        }
 
         try {
             setActionInProgress(true);
             await axios.patch(
                 `${API}/admin/posts/${postId}/comments/${commentId}/flag`,
-                { flagged: !flagged, flagReason: flagReason },
+                { flagged: !flagged, flagReason: flagReason.trim() },
                 { headers }
             );
             fetchComments();
         } catch (error) {
             console.error('Error flagging comment:', error);
-            setAuthError(error.response?.data?.msg || 'Failed to flag comment');
+            setAuthError(getErrorMessage(error, 'Failed to flag comment'));
         } finally {
             setActionInProgress(false);
         }
@@ -165,63 +193,64 @@ const AdminBlogComments = () => {
     };
 
     return (
-        <div className="admin-container">
+        <div className="admin-layout">
             <AdminNavbar active="blog-comments" />
-            <div className="admin-panel">
-                <div className="admin-header">
-                    <h1>ব্লগ মন্তব্য ব্যবস্থাপনা</h1>
+            <div className="admin-main">
+                <div className="admin-page-header">
+                    <h1 className="bn-text">ব্লগ মন্তব্য ব্যবস্থাপনা</h1>
+                    <p>Approve, flag, and moderate comments from one place.</p>
                 </div>
 
-                {authError && <div className="error-banner">{authError}</div>}
+                {authError && <div className="blog-comments-error-banner">{authError}</div>}
 
-                <div className="admin-controls">
-                    <div className="control-group">
-                        <div className="search-box">
-                            <Search size={20} />
+                <div className="admin-card blog-comments-toolbar-card">
+                    <div className="blog-comments-toolbar-row">
+                        <div className="blog-comments-search-wrap">
+                            <Search size={18} />
                             <input
                                 type="text"
-                                placeholder="Search comments by name, email, or text..."
+                                placeholder="Search comments by name, email, or text"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
                         </div>
+
+                        <div className="blog-comments-filter-wrap">
+                            <Filter size={18} />
+                            <select value={filterStatus} onChange={(e) => {
+                                setFilterStatus(e.target.value);
+                                setPagination({ ...pagination, page: 1 });
+                            }}>
+                                <option value="all">All Comments</option>
+                                <option value="pending">Pending Approval</option>
+                                <option value="approved">Approved</option>
+                                <option value="flagged">Flagged</option>
+                            </select>
+                        </div>
+
+                        {selectedComments.size > 0 && (
+                            <button className="blog-comments-bulk-delete" onClick={bulkDelete} disabled={actionInProgress}>
+                                Delete ({selectedComments.size})
+                            </button>
+                        )}
                     </div>
 
-                    <div className="control-group">
-                        <Filter size={18} />
-                        <select value={filterStatus} onChange={(e) => {
-                            setFilterStatus(e.target.value);
-                            setPagination({ ...pagination, page: 1 });
-                        }}>
-                            <option value="all">All Comments</option>
-                            <option value="pending">Pending Approval</option>
-                            <option value="approved">Approved</option>
-                            <option value="flagged">Flagged</option>
-                        </select>
+                    <div className="blog-comments-stats-row">
+                        <span>Total: {pagination.total}</span>
+                        {filterStatus === 'pending' && <span className="blog-comments-chip pending">Pending Review</span>}
+                        {filterStatus === 'flagged' && <span className="blog-comments-chip flagged">Flagged as Spam</span>}
                     </div>
-
-                    {selectedComments.size > 0 && (
-                        <button className="bulk-action-btn danger" onClick={bulkDelete} disabled={actionInProgress}>
-                            Delete ({selectedComments.size})
-                        </button>
-                    )}
                 </div>
 
-                <div className="comments-stats">
-                    <span>Total: {pagination.total}</span>
-                    {filterStatus === 'pending' && <span className="pending-badge">Pending Review</span>}
-                    {filterStatus === 'flagged' && <span className="flagged-badge">Flagged as Spam</span>}
-                </div>
-
-                {loading && <div className="loading-spinner">Loading comments...</div>}
+                {loading && <div className="blog-comments-loading">Loading comments...</div>}
 
                 {!loading && filteredComments.length === 0 && (
-                    <div className="empty-state">
+                    <div className="admin-card blog-comments-empty-state">
                         <p>No comments found.</p>
                     </div>
                 )}
 
-                <div className="comments-list">
+                <div className="blog-comments-list">
                     {filteredComments.map((item) => {
                         const comment = item.comment;
                         const isSelected = selectedComments.has(comment?.id);
@@ -230,38 +259,38 @@ const AdminBlogComments = () => {
                         return (
                             <div
                                 key={comment?.id}
-                                className={`comment-item ${!comment?.approved ? 'pending' : ''} ${
+                                className={`blog-comment-item ${!comment?.approved ? 'pending' : ''} ${
                                     comment?.flagged ? 'flagged' : ''
                                 }`}
                             >
-                                <div className="comment-header">
+                                <div className="blog-comment-header">
                                     <input
                                         type="checkbox"
                                         checked={isSelected}
                                         onChange={() => toggleSelectComment(comment?.id)}
                                         disabled={actionInProgress}
                                     />
-                                    <div className="comment-meta">
+                                    <div className="blog-comment-meta">
                                         <strong>{comment?.name}</strong>
                                         {comment?.email && (
-                                            <span className="comment-email">{comment.email}</span>
+                                            <span className="blog-comment-email">{comment.email}</span>
                                         )}
-                                        <span className="comment-date">{formatDate(comment?.createdAt)}</span>
+                                        <span className="blog-comment-date">{formatDate(comment?.createdAt)}</span>
                                     </div>
-                                    <div className="comment-badges">
-                                        {!comment?.approved && <span className="badge pending">Pending</span>}
-                                        {comment?.flagged && <span className="badge flagged">Flagged</span>}
+                                    <div className="blog-comment-badges">
+                                        {!comment?.approved && <span className="blog-comments-chip pending">Pending</span>}
+                                        {comment?.flagged && <span className="blog-comments-chip flagged">Flagged</span>}
                                     </div>
                                 </div>
 
-                                <div className="comment-post-info">
+                                <div className="blog-comment-post-link">
                                     <Eye size={14} />
                                     <a href={`/blog/${item.postSlug}`} target="_blank" rel="noopener noreferrer">
                                         {item.postTitle}
                                     </a>
                                 </div>
 
-                                <div className="comment-text">
+                                <div className="blog-comment-text">
                                     {isExpanded ? (
                                         <p>{comment?.text}</p>
                                     ) : (
@@ -269,7 +298,7 @@ const AdminBlogComments = () => {
                                     )}
                                     {comment?.text?.length > 150 && (
                                         <button
-                                            className="expand-btn"
+                                            className="blog-comment-expand-btn"
                                             onClick={() =>
                                                 setExpandedComment(isExpanded ? null : comment?.id)
                                             }
@@ -280,14 +309,14 @@ const AdminBlogComments = () => {
                                 </div>
 
                                 {comment?.flagged && comment?.flagReason && (
-                                    <div className="flag-reason">
+                                    <div className="blog-comment-flag-reason">
                                         <strong>Flag Reason:</strong> {comment.flagReason}
                                     </div>
                                 )}
 
-                                <div className="comment-actions">
+                                <div className="blog-comment-actions">
                                     <button
-                                        className={`action-btn ${comment?.approved ? 'secondary' : 'primary'}`}
+                                        className={`blog-comment-btn ${comment?.approved ? 'secondary' : 'primary'}`}
                                         onClick={() =>
                                             approveComment(item.postId, comment?.id, comment?.approved)
                                         }
@@ -299,9 +328,9 @@ const AdminBlogComments = () => {
                                     </button>
 
                                     <button
-                                        className={`action-btn ${comment?.flagged ? 'secondary' : ''}`}
+                                        className={`blog-comment-btn ${comment?.flagged ? 'secondary' : ''}`}
                                         onClick={() =>
-                                            flagComment(item.postId, comment?.id, comment?.flagged, comment?.flagReason)
+                                            flagComment(item.postId, comment?.id, comment?.flagged)
                                         }
                                         disabled={actionInProgress}
                                         title={comment?.flagged ? 'Unflag Comment' : 'Flag as Spam'}
@@ -311,7 +340,7 @@ const AdminBlogComments = () => {
                                     </button>
 
                                     <button
-                                        className="action-btn danger"
+                                        className="blog-comment-btn danger"
                                         onClick={() => deleteComment(item.postId, comment?.id)}
                                         disabled={actionInProgress}
                                     >
@@ -325,7 +354,7 @@ const AdminBlogComments = () => {
                 </div>
 
                 {!loading && filteredComments.length > 0 && (
-                    <div className="pagination">
+                    <div className="blog-comments-pagination">
                         <button
                             disabled={pagination.page === 1 || loading}
                             onClick={() =>

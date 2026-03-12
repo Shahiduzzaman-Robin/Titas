@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { API_BASE_URL } from '../constants';
 import ReactQuill, { Quill } from 'react-quill';
-import { Edit3, Trash2, PlusCircle, Upload, Maximize2, AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
+import { Edit3, Trash2, PlusCircle, Upload, Maximize2, AlignLeft, AlignCenter, AlignRight, CheckCircle, AlertCircle, Eye, Search, Filter } from 'lucide-react';
 import AdminNavbar from '../components/AdminNavbar';
 import CustomSelect from '../components/CustomSelect';
 import 'react-quill/dist/quill.snow.css';
@@ -52,6 +52,15 @@ const AdminBlog = () => {
     const [categories, setCategories] = useState([]);
     const [tags, setTags] = useState([]);
     const [activeTab, setActiveTab] = useState('posts');
+    const [comments, setComments] = useState([]);
+    const [filteredComments, setFilteredComments] = useState([]);
+    const [commentsLoading, setCommentsLoading] = useState(false);
+    const [filterStatus, setFilterStatus] = useState('all');
+    const [searchTerm, setSearchTerm] = useState('');
+    const [commentPagination, setCommentPagination] = useState({ page: 1, limit: 20, total: 0, hasMore: false });
+    const [selectedComments, setSelectedComments] = useState(new Set());
+    const [actionInProgress, setActionInProgress] = useState(false);
+    const [expandedComment, setExpandedComment] = useState(null);
     const [form, setForm] = useState(initialForm);
     const [loading, setLoading] = useState(false);
     const [imagePreviewUrl, setImagePreviewUrl] = useState('');
@@ -85,6 +94,29 @@ const AdminBlog = () => {
             URL.revokeObjectURL(objectUrl);
         };
     }, [form.featuredImageFile]);
+
+    useEffect(() => {
+        if (activeTab === 'comments') {
+            fetchComments();
+        }
+    }, [activeTab, filterStatus, commentPagination.page]);
+
+    useEffect(() => {
+        const filtered = comments.filter((item) => {
+            const searchLower = searchTerm.toLowerCase();
+            const name = String(item.comment?.name || '').toLowerCase();
+            const email = String(item.comment?.email || '').toLowerCase();
+            const text = String(item.comment?.text || '').toLowerCase();
+            const postTitle = String(item.postTitle || '').toLowerCase();
+            return (
+                name.includes(searchLower) ||
+                email.includes(searchLower) ||
+                text.includes(searchLower) ||
+                postTitle.includes(searchLower)
+            );
+        });
+        setFilteredComments(filtered);
+    }, [searchTerm, comments]);
 
     const headers = useMemo(() => ({ Authorization: `Bearer ${token}` }), [token]);
     const featuredImagePreviewSrc = imagePreviewUrl || (form.featuredImage ? `${BACKEND_ORIGIN}${form.featuredImage}` : '');
@@ -340,6 +372,113 @@ const AdminBlog = () => {
         }
     };
 
+    const fetchComments = async () => {
+        try {
+            setCommentsLoading(true);
+            const response = await axios.get(`${API}/admin/comments`, {
+                params: {
+                    status: filterStatus,
+                    page: commentPagination.page,
+                    limit: commentPagination.limit,
+                },
+                headers,
+            });
+            setComments(response.data.comments || []);
+            setCommentPagination(prev => ({
+                ...prev,
+                total: response.data.pagination?.total || 0,
+                hasMore: response.data.pagination?.hasMore || false,
+            }));
+            setSelectedComments(new Set());
+        } catch (error) {
+            console.error('Error fetching comments:', error);
+        } finally {
+            setCommentsLoading(false);
+        }
+    };
+
+    const deleteComment = async (postId, commentId) => {
+        if (!window.confirm('Are you sure you want to delete this comment?')) return;
+        try {
+            setActionInProgress(true);
+            await axios.delete(`${API}/admin/posts/${postId}/comments/${commentId}`, { headers });
+            fetchComments();
+        } catch (error) {
+            console.error('Error deleting comment:', error);
+        } finally {
+            setActionInProgress(false);
+        }
+    };
+
+    const approveComment = async (postId, commentId, currentApproved) => {
+        try {
+            setActionInProgress(true);
+            await axios.patch(
+                `${API}/admin/posts/${postId}/comments/${commentId}/approve`,
+                { approved: !currentApproved },
+                { headers }
+            );
+            fetchComments();
+        } catch (error) {
+            console.error('Error updating approval status:', error);
+        } finally {
+            setActionInProgress(false);
+        }
+    };
+
+    const flagComment = async (postId, commentId, flagged) => {
+        let flagReason = '';
+        if (!flagged) {
+            flagReason = prompt('Enter reason for flagging (spam, inappropriate, etc.):') || '';
+            if (!flagReason.trim()) return;
+        }
+        try {
+            setActionInProgress(true);
+            await axios.patch(
+                `${API}/admin/posts/${postId}/comments/${commentId}/flag`,
+                { flagged: !flagged, flagReason: flagReason.trim() },
+                { headers }
+            );
+            fetchComments();
+        } catch (error) {
+            console.error('Error flagging comment:', error);
+        } finally {
+            setActionInProgress(false);
+        }
+    };
+
+    const toggleSelectComment = (commentId) => {
+        const newSelected = new Set(selectedComments);
+        if (newSelected.has(commentId)) {
+            newSelected.delete(commentId);
+        } else {
+            newSelected.add(commentId);
+        }
+        setSelectedComments(newSelected);
+    };
+
+    const bulkDeleteComments = async () => {
+        if (selectedComments.size === 0) return;
+        if (!window.confirm(`Delete ${selectedComments.size} comment(s)?`)) return;
+        try {
+            setActionInProgress(true);
+            const commentsToDelete = comments.filter((item) => selectedComments.has(item.comment?.id));
+            for (const item of commentsToDelete) {
+                await axios.delete(`${API}/admin/posts/${item.postId}/comments/${item.comment?.id}`, { headers });
+            }
+            fetchComments();
+        } catch (error) {
+            console.error('Error bulk deleting:', error);
+        } finally {
+            setActionInProgress(false);
+        }
+    };
+
+    const formatCommentDate = (dateString) => {
+        const date = new Date(dateString);
+        return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+    };
+
     return (
         <div className="admin-layout">
             <AdminNavbar active="blog" />
@@ -359,6 +498,7 @@ const AdminBlog = () => {
                     <button className="btn-outline" onClick={() => setActiveTab('posts')}>Posts</button>
                     <button className="btn-outline" onClick={() => setActiveTab('categories')}>Categories</button>
                     <button className="btn-outline" onClick={() => setActiveTab('tags')}>Tags</button>
+                    <button className="btn-outline" onClick={() => setActiveTab('comments')}>মন্তব্য</button>
                 </div>
 
                 {activeTab === 'posts' && (
@@ -539,6 +679,156 @@ const AdminBlog = () => {
                             ))}
                         </div>
                     </div>
+                )}
+
+                {activeTab === 'comments' && (
+                    <>
+                        <div className="admin-card blog-comments-toolbar-card">
+                            <div className="blog-comments-toolbar-row">
+                                <div className="blog-comments-search-wrap">
+                                    <Search size={18} />
+                                    <input
+                                        type="text"
+                                        placeholder="Search comments by name, email, or text"
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                    />
+                                </div>
+                                <div className="blog-comments-filter-wrap">
+                                    <Filter size={18} />
+                                    <select value={filterStatus} onChange={(e) => {
+                                        setFilterStatus(e.target.value);
+                                        setCommentPagination(prev => ({ ...prev, page: 1 }));
+                                    }}>
+                                        <option value="all">All Comments</option>
+                                        <option value="pending">Pending Approval</option>
+                                        <option value="approved">Approved</option>
+                                        <option value="flagged">Flagged</option>
+                                    </select>
+                                </div>
+                                {selectedComments.size > 0 && (
+                                    <button className="blog-comments-bulk-delete" onClick={bulkDeleteComments} disabled={actionInProgress}>
+                                        Delete ({selectedComments.size})
+                                    </button>
+                                )}
+                            </div>
+                            <div className="blog-comments-stats-row">
+                                <span>Total: {commentPagination.total}</span>
+                                {filterStatus === 'pending' && <span className="blog-comments-chip pending">Pending Review</span>}
+                                {filterStatus === 'flagged' && <span className="blog-comments-chip flagged">Flagged as Spam</span>}
+                            </div>
+                        </div>
+
+                        {commentsLoading && <div className="blog-comments-loading">Loading comments...</div>}
+
+                        {!commentsLoading && filteredComments.length === 0 && (
+                            <div className="admin-card blog-comments-empty-state">
+                                <p>No comments found.</p>
+                            </div>
+                        )}
+
+                        <div className="blog-comments-list">
+                            {filteredComments.map((item) => {
+                                const comment = item.comment;
+                                const isSelected = selectedComments.has(comment?.id);
+                                const isExpanded = expandedComment === comment?.id;
+                                return (
+                                    <div
+                                        key={comment?.id}
+                                        className={`blog-comment-item ${!comment?.approved ? 'pending' : ''} ${comment?.flagged ? 'flagged' : ''}`}
+                                    >
+                                        <div className="blog-comment-header">
+                                            <input
+                                                type="checkbox"
+                                                checked={isSelected}
+                                                onChange={() => toggleSelectComment(comment?.id)}
+                                                disabled={actionInProgress}
+                                            />
+                                            <div className="blog-comment-meta">
+                                                <strong>{comment?.name}</strong>
+                                                {comment?.email && <span className="blog-comment-email">{comment.email}</span>}
+                                                <span className="blog-comment-date">{formatCommentDate(comment?.createdAt)}</span>
+                                            </div>
+                                            <div className="blog-comment-badges">
+                                                {!comment?.approved && <span className="blog-comments-chip pending">Pending</span>}
+                                                {comment?.flagged && <span className="blog-comments-chip flagged">Flagged</span>}
+                                            </div>
+                                        </div>
+                                        <div className="blog-comment-post-link">
+                                            <Eye size={14} />
+                                            <a href={`/blog/${item.postSlug}`} target="_blank" rel="noopener noreferrer">
+                                                {item.postTitle}
+                                            </a>
+                                        </div>
+                                        <div className="blog-comment-text">
+                                            {isExpanded ? (
+                                                <p>{comment?.text}</p>
+                                            ) : (
+                                                <p>{comment?.text?.substring(0, 150)}...</p>
+                                            )}
+                                            {comment?.text?.length > 150 && (
+                                                <button
+                                                    className="blog-comment-expand-btn"
+                                                    onClick={() => setExpandedComment(isExpanded ? null : comment?.id)}
+                                                >
+                                                    {isExpanded ? 'Show Less' : 'Show More'}
+                                                </button>
+                                            )}
+                                        </div>
+                                        {comment?.flagged && comment?.flagReason && (
+                                            <div className="blog-comment-flag-reason">
+                                                <strong>Flag Reason:</strong> {comment.flagReason}
+                                            </div>
+                                        )}
+                                        <div className="blog-comment-actions">
+                                            <button
+                                                className={`blog-comment-btn ${comment?.approved ? 'secondary' : 'primary'}`}
+                                                onClick={() => approveComment(item.postId, comment?.id, comment?.approved)}
+                                                disabled={actionInProgress}
+                                            >
+                                                <CheckCircle size={16} />
+                                                {comment?.approved ? 'Unapprove' : 'Approve'}
+                                            </button>
+                                            <button
+                                                className={`blog-comment-btn ${comment?.flagged ? 'secondary' : ''}`}
+                                                onClick={() => flagComment(item.postId, comment?.id, comment?.flagged)}
+                                                disabled={actionInProgress}
+                                            >
+                                                <AlertCircle size={16} />
+                                                {comment?.flagged ? 'Unflag' : 'Flag'}
+                                            </button>
+                                            <button
+                                                className="blog-comment-btn danger"
+                                                onClick={() => deleteComment(item.postId, comment?.id)}
+                                                disabled={actionInProgress}
+                                            >
+                                                <Trash2 size={16} />
+                                                Delete
+                                            </button>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        {!commentsLoading && filteredComments.length > 0 && (
+                            <div className="blog-comments-pagination">
+                                <button
+                                    disabled={commentPagination.page === 1 || commentsLoading}
+                                    onClick={() => setCommentPagination(prev => ({ ...prev, page: prev.page - 1 }))}
+                                >
+                                    Previous
+                                </button>
+                                <span>Page {commentPagination.page} of {Math.ceil(commentPagination.total / commentPagination.limit) || 1}</span>
+                                <button
+                                    disabled={!commentPagination.hasMore || commentsLoading}
+                                    onClick={() => setCommentPagination(prev => ({ ...prev, page: prev.page + 1 }))}
+                                >
+                                    Next
+                                </button>
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
         </div>

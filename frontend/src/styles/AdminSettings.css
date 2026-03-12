@@ -1,0 +1,248 @@
+/* ===== ADMIN SETTINGS PAGE ===== */
+
+/* Page Header */
+.as-page-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.as-page-header-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: #f3f4f6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6b7280;
+    flex-shrink: 0;
+}
+
+.as-page-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0;
+    line-height: 1.3;
+}
+
+.as-page-subtitle {
+    font-size: 0.875rem;
+    color: #9ca3af;
+    margin: 0.25rem 0 0;
+    font-weight: 400;
+}
+
+/* Grid Layout */
+.as-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    max-width: 960px;
+}
+
+@media (max-width: 800px) {
+    .as-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Cards */
+.as-card {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 2rem;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    transition: box-shadow 0.2s ease;
+}
+
+.as-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+/* Card Header */
+.as-card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+    margin-bottom: 1.75rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.as-card-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.as-card-icon-profile {
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
+.as-card-icon-security {
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
+.as-card-title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0;
+    line-height: 1.3;
+}
+
+.as-card-desc {
+    font-size: 0.8rem;
+    color: #9ca3af;
+    margin: 0.15rem 0 0;
+}
+
+/* Alert Messages */
+.as-alert {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    border-radius: 10px;
+    margin-bottom: 1.25rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.as-alert-success {
+    background: #f0fdf4;
+    color: #166534;
+    border: 1px solid #d1fae5;
+}
+
+.as-alert-error {
+    background: #fef2f2;
+    color: #991b1b;
+    border: 1px solid #fee2e2;
+}
+
+/* Form Fields */
+.as-field {
+    margin-bottom: 1.25rem;
+}
+
+.as-label {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #6b7280;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.as-input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 10px;
+    font-size: 0.925rem;
+    color: #1f2937;
+    background: #fafafa;
+    outline: none;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+
+.as-input::placeholder {
+    color: #c0c5cc;
+}
+
+.as-input:focus {
+    border-color: #9ca3af;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(156, 163, 175, 0.15);
+}
+
+/* Password Input Wrapper */
+.as-input-wrap {
+    position: relative;
+}
+
+.as-input-wrap .as-input {
+    padding-right: 2.75rem;
+}
+
+.as-eye-btn {
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #9ca3af;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: color 0.2s;
+}
+
+.as-eye-btn:hover {
+    color: #6b7280;
+}
+
+/* Buttons */
+.as-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-top: 0.5rem;
+    font-family: inherit;
+    width: 100%;
+}
+
+.as-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.as-btn-save {
+    background: #374151;
+    color: #ffffff;
+}
+
+.as-btn-save:hover:not(:disabled) {
+    background: #1f2937;
+    box-shadow: 0 2px 8px rgba(31, 41, 55, 0.25);
+}
+
+.as-btn-password {
+    background: #6b7280;
+    color: #ffffff;
+}
+
+.as-btn-password:hover:not(:disabled) {
+    background: #4b5563;
+    box-shadow: 0 2px 8px rgba(75, 85, 99, 0.25);
+}

@@ -18,7 +18,9 @@ const protectAdmin = async (req, res, next) => {
             req.admin = admin;
             next();
         } catch (error) {
-            console.error('Auth Error:', error);
+            if (error.name === 'TokenExpiredError') {
+                return res.status(401).json({ success: false, message: 'Token expired, please login again' });
+            }
             res.status(401).json({ success: false, message: 'Not authorized, token failed' });
         }
     } else {

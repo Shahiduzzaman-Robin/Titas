@@ -7,6 +7,32 @@
     transition: all 0.3s ease;
 }
 
+.navbar.navbar-compact .nav-content {
+    height: 56px;
+}
+
+.navbar.navbar-compact .logo-img {
+    width: 34px;
+    height: 34px;
+}
+
+.navbar.navbar-compact .logo-text h1 {
+    font-size: 1.1rem;
+}
+
+.navbar.navbar-compact .nav-actions {
+    gap: 1rem;
+}
+
+.navbar.navbar-compact .nav-links-capsule {
+    padding: 0.3rem;
+}
+
+.navbar.navbar-compact .nav-link {
+    font-size: 0.88rem;
+    padding: 0.35rem 0.75rem;
+}
+
 .nav-content {
     height: 70px;
 }
@@ -179,12 +205,38 @@
 }
 
 @media (max-width: 1024px) {
+    .nav-content {
+        height: auto;
+        padding: 0.7rem 0;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.7rem;
+    }
+
     .nav-actions {
-        gap: 1rem;
+        gap: 0.7rem;
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
     }
 
     .nav-links-capsule {
-        display: none;
-        /* Mobile menu should be implemented separately */
+        display: flex;
+        width: 100%;
+        flex-wrap: wrap;
+        overflow: visible;
+        justify-content: flex-start;
+        gap: 0.35rem;
+        padding: 0.35rem;
+        border-radius: 12px;
+    }
+
+    .nav-link {
+        flex: 0 0 auto;
+    }
+
+    .nav-buttons {
+        width: 100%;
+        justify-content: flex-end;
     }
 }

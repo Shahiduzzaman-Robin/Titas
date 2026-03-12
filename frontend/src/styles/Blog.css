@@ -82,13 +82,14 @@
 
 .featured-post-wrap {
   margin-top: 1rem;
-  margin-bottom: 2rem;
+  margin-bottom: 5rem;
 }
 
 .featured-post-card {
   display: grid;
   grid-template-columns: 1.2fr 1fr;
   overflow: hidden;
+  margin-bottom: 2.5rem;
 }
 
 .featured-image-wrapper {
@@ -178,8 +179,9 @@
 .blog-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 320px;
-  gap: 1.5rem;
+  gap: 3rem;
   align-items: start;
+  margin-top: 2rem;
 }
 
 .posts-headline-row {

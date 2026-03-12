@@ -1,6 +1,8 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const ExcelJS = require('exceljs');
+const rateLimit = require('express-rate-limit');
+const { body, validationResult } = require('express-validator');
 const Admin = require('../models/Admin');
 const AuditLog = require('../models/AuditLog');
 const Student = require('../models/Student');
@@ -16,8 +18,21 @@ const {
     sendNotificationTestEmail,
 } = require('../utils/emailNotifier');
 const { sendUpcomingEventReminders } = require('../utils/eventReminderService');
+const { protectAdmin: protectAdminAll } = require('../middleware/auth');
 
 const router = express.Router();
+
+// Escape special regex characters to prevent ReDoS / NoSQL injection
+const escapeRegex = (str) => String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+// Strict rate limiter for login: 10 attempts per 15 minutes
+const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 10,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { msg: 'Too many login attempts. Please try again after 15 minutes.' },
+});
 
 // Middleware for protecting Admin routes
 const protectAdmin = async (req, res, next) => {
@@ -47,7 +62,16 @@ const protectAdmin = async (req, res, next) => {
 // @route   POST /api/admin/login
 // @desc    Auth admin & get token
 // @access  Public
-router.post('/login', async (req, res) => {
+router.post('/login',
+    loginLimiter,
+    body('username').trim().notEmpty().withMessage('Username is required'),
+    body('password').notEmpty().withMessage('Password is required'),
+    async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ msg: errors.array()[0].msg });
+    }
+
     const { username, password } = req.body;
     const normalizedUsername = String(username || '').trim();
 
@@ -56,7 +80,7 @@ router.post('/login', async (req, res) => {
 
         if (adminUser && (await adminUser.matchPassword(password))) {
             const token = jwt.sign({ id: adminUser._id }, process.env.JWT_SECRET || 'titas_secret_key', {
-                expiresIn: '30d',
+                expiresIn: process.env.JWT_EXPIRES_IN || '24h',
             });
 
             await logAdminAction(req, {
@@ -84,7 +108,7 @@ router.post('/login', async (req, res) => {
         }
     } catch (error) {
         console.error(error);
-        res.status(500).send('Server Error');
+        res.status(500).json({ msg: 'Server Error' });
     }
 });
 
@@ -131,10 +155,11 @@ router.get('/audit-logs', protectAdmin, async (req, res) => {
         if (action) query.action = action;
         if (adminUsername) query.adminUsername = adminUsername;
         if (search) {
+            const safeSearch = escapeRegex(search);
             query.$or = [
-                { targetLabel: { $regex: search, $options: 'i' } },
-                { description: { $regex: search, $options: 'i' } },
-                { adminUsername: { $regex: search, $options: 'i' } },
+                { targetLabel: { $regex: safeSearch, $options: 'i' } },
+                { description: { $regex: safeSearch, $options: 'i' } },
+                { adminUsername: { $regex: safeSearch, $options: 'i' } },
             ];
         }
 
@@ -303,11 +328,12 @@ router.get('/students', protectAdmin, async (req, res) => {
         if (upazila) filter.upazila = upazila;
         if (status) filter.status = status;
         if (search) {
+            const safeSearch = escapeRegex(search);
             filter.$or = [
-                { nameEn: { $regex: search, $options: 'i' } },
-                { nameBn: { $regex: search, $options: 'i' } },
-                { mobile: { $regex: search, $options: 'i' } },
-                { regNo: { $regex: search, $options: 'i' } }
+                { nameEn: { $regex: safeSearch, $options: 'i' } },
+                { nameBn: { $regex: safeSearch, $options: 'i' } },
+                { mobile: { $regex: safeSearch, $options: 'i' } },
+                { regNo: { $regex: safeSearch, $options: 'i' } }
             ];
         }
         const students = await Student.find(filter).sort({ createdAt: -1 });
@@ -937,5 +963,124 @@ router.put('/edits/:id/reject', protectAdmin, async (req, res) => {
         res.status(500).send('Server Error');
     }
 });
+
+// ═══════════════════════════════════════════════
+// ADMIN PROFILE & SETTINGS (all admin roles)
+// ═══════════════════════════════════════════════
+
+// @route   GET /api/admin/profile
+// @desc    Get current admin profile
+// @access  Private (all admin roles)
+router.get('/profile', protectAdminAll, async (req, res) => {
+    try {
+        const admin = await Admin.findById(req.admin._id).select('-password');
+        if (!admin) return res.status(404).json({ msg: 'Admin not found' });
+        res.json({
+            _id: admin._id,
+            username: admin.username,
+            email: admin.email || '',
+            displayName: admin.displayName || '',
+            role: admin.role,
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ msg: 'Server Error' });
+    }
+});
+
+// @route   PUT /api/admin/profile
+// @desc    Update admin profile (username, email, displayName)
+// @access  Private (all admin roles)
+router.put('/profile', protectAdminAll,
+    body('username').optional().trim().isLength({ min: 3 }).withMessage('Username must be at least 3 characters'),
+    body('email').optional().trim().isEmail().withMessage('Invalid email format'),
+    body('displayName').optional().trim(),
+    async (req, res) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ msg: errors.array()[0].msg });
+        }
+
+        try {
+            const admin = await Admin.findById(req.admin._id);
+            if (!admin) return res.status(404).json({ msg: 'Admin not found' });
+
+            const { username, email, displayName } = req.body;
+
+            if (username && username !== admin.username) {
+                const existing = await Admin.findOne({ username: username.trim() });
+                if (existing) return res.status(400).json({ msg: 'Username already taken' });
+                admin.username = username.trim();
+            }
+            if (email !== undefined) admin.email = email.trim();
+            if (displayName !== undefined) admin.displayName = displayName.trim();
+
+            await admin.save();
+
+            await logAdminAction(req, {
+                module: 'admin-profile',
+                action: 'update-profile',
+                targetType: 'admin',
+                targetId: admin._id,
+                targetLabel: admin.username,
+                description: `Admin ${admin.username} updated their profile`,
+            });
+
+            // Update localStorage-compatible response
+            res.json({
+                msg: 'Profile updated successfully',
+                admin: {
+                    _id: admin._id,
+                    username: admin.username,
+                    email: admin.email || '',
+                    displayName: admin.displayName || '',
+                    role: admin.role,
+                },
+            });
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({ msg: 'Server Error' });
+        }
+    }
+);
+
+// @route   PUT /api/admin/change-password
+// @desc    Change admin password
+// @access  Private (all admin roles)
+router.put('/change-password', protectAdminAll,
+    body('currentPassword').notEmpty().withMessage('Current password is required'),
+    body('newPassword').isLength({ min: 6 }).withMessage('New password must be at least 6 characters'),
+    async (req, res) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ msg: errors.array()[0].msg });
+        }
+
+        try {
+            const admin = await Admin.findById(req.admin._id);
+            if (!admin) return res.status(404).json({ msg: 'Admin not found' });
+
+            const isMatch = await admin.matchPassword(req.body.currentPassword);
+            if (!isMatch) return res.status(400).json({ msg: 'Current password is incorrect' });
+
+            admin.password = req.body.newPassword;
+            await admin.save();
+
+            await logAdminAction(req, {
+                module: 'admin-profile',
+                action: 'change-password',
+                targetType: 'admin',
+                targetId: admin._id,
+                targetLabel: admin.username,
+                description: `Admin ${admin.username} changed their password`,
+            });
+
+            res.json({ msg: 'Password changed successfully' });
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({ msg: 'Server Error' });
+        }
+    }
+);
 
 module.exports = router;

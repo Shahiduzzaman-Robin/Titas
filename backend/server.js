@@ -3,6 +3,8 @@ require('dotenv').config({ path: path.join(__dirname, '.env') });
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const studentRoutes = require('./routes/students');
 const adminRoutes = require('./routes/admin');
 const blogRoutes = require('./routes/blog');
@@ -15,12 +17,33 @@ const { sendUpcomingEventReminders } = require('./utils/eventReminderService');
 
 const app = express();
 
-// Middleware
+// Security middleware — relax cross-origin policies for split frontend/backend setup
+app.use(helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+    crossOriginOpenerPolicy: false,
+    contentSecurityPolicy: false,
+}));
+
+// CORS configuration
+const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:5173')
+    .split(',')
+    .map(o => o.trim());
 app.use(cors({
-    origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
+    origin: allowedOrigins,
     credentials: true,
 }));
-app.use(express.json());
+
+// Global rate limiter (generous in development, stricter in production)
+const isProduction = process.env.NODE_ENV === 'production';
+app.use(rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: isProduction ? 500 : 5000,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { msg: 'Too many requests, please try again later.' },
+}));
+
+app.use(express.json({ limit: '1mb' }));
 app.use((req, res, next) => {
     res.on('finish', () => {
         console.log(`${req.method} ${req.url} - ${res.statusCode}`);
@@ -107,7 +130,11 @@ app.use('/api/events', eventRoutes);
 // Error handling middleware
 app.use((err, req, res, next) => {
     console.error('SERVER ERROR:', err);
-    res.status(500).json({ success: false, message: err.message || 'Internal Server Error' });
+    const statusCode = err.status || 500;
+    res.status(statusCode).json({
+        success: false,
+        message: statusCode === 500 ? 'Internal Server Error' : (err.message || 'Something went wrong'),
+    });
 });
 
 const PORT = process.env.PORT || 5010;

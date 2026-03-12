@@ -8,6 +8,8 @@ import ContactForm from '../components/ContactForm';
 import Footer from '../components/Footer';
 import fruitFest from '../assets/hero/Fruit_Fest.jpg';
 import aboutUs from '../assets/aboutus.jpg';
+import presidentPhoto from '../assets/president.png';
+import gsPhoto from '../assets/gs.png';
 import '../styles/Home.css';
 
 const Home = () => {
@@ -15,10 +17,27 @@ const Home = () => {
     const [loadingPosts, setLoadingPosts] = useState(true);
     const [notices, setNotices] = useState([]);
 
-    // States to handle the Executive Committee
-    const [president, setPresident] = useState(null);
-    const [secretary, setSecretary] = useState(null);
-    const [loadingCommittee, setLoadingCommittee] = useState(true);
+    // Static leadership data
+    const leaders = [
+        {
+            name: 'রাইয়ান কবির ঐশী',
+            nameEn: 'Raiyan Kabir Oishi',
+            role: 'সভাপতি',
+            department: 'সমাজবিজ্ঞান বিভাগ',
+            session: '২০১৯-২০২০',
+            photo: presidentPhoto,
+            message: 'তিতাস এমন একটি প্রাঙ্গণ যেখানে মেধা, মনন এবং ভ্রাতৃত্ববোধ একই সুতোয় গাঁথা। আমাদের এই পরিবার ঢাকা বিশ্ববিদ্যালয়ে অধ্যয়নরত ব্রাহ্মণবাড়িয়ার সকল শিক্ষার্থীর কল্যাণে কাজ করে যাচ্ছে।',
+        },
+        {
+            name: 'রিফতি-আল-জাবেদ',
+            nameEn: 'Rifty Al Zabed',
+            role: 'সাধারণ সম্পাদক',
+            department: 'কমিউনিকেশন ডিজঅর্ডারস বিভাগ',
+            session: '২০২০-২০২১',
+            photo: gsPhoto,
+            message: 'তিতাস শুধু একটি নাম নয়, এটি আমাদের আবেগ, ভালোবাসা এবং ঐক্যের প্রতীক। আসুন কাঁধে কাঁধ মিলিয়ে ব্রাহ্মণবাড়িয়ার মুখ উজ্জ্বল করি পৃথিবীর সবখানে।',
+        },
+    ];
 
     // States for Events and Gallery
     const [events, setEvents] = useState([]);
@@ -66,24 +85,7 @@ const Home = () => {
         fetchPosts();
         fetchNotices();
 
-        const fetchCommittee = async () => {
-            try {
-                // Fetch all approved students to scan for President and Secretary
-                const res = await axios.get(`${API_BASE_URL}/api/students?status=approved`);
-                const students = res.data.students || [];
 
-                // Extract specific leaders by email (Stable for the year)
-                const pres = students.find(s => s.email === 'rakibulhasan.du7480@gmail.com');
-                const sec = students.find(s => s.email === 'jannatt1610@gmail.com');
-
-                setPresident(pres);
-                setSecretary(sec);
-            } catch (err) {
-                console.error('Failed to fetch committee members', err);
-            } finally {
-                setLoadingCommittee(false);
-            }
-        };
 
         const fetchEvents = async () => {
             try {
@@ -113,7 +115,6 @@ const Home = () => {
 
         fetchPosts();
         fetchNotices();
-        fetchCommittee();
         fetchEvents();
         fetchGallery();
 
@@ -555,53 +556,27 @@ const Home = () => {
                 <div className="container">
                     <div className="section-header-center">
                         <div className="section-label">Leadership</div>
-                        <h2 className="section-title bn-text">কার্যনির্বাহী সংসদ ২০২৪</h2>
+                        <h2 className="section-title bn-text">কার্যনির্বাহী কমিটি ২০২৫-২৬</h2>
                     </div>
 
                     <div className="committee-grid dual">
-                        {loadingCommittee ? (
-                            <div className="loading-state col-span-2">Loading leadership...</div>
-                        ) : (
-                            <>
-                                {/* PRESIDENT CARD */}
-                                <div className="committee-card-detail glass-panel text-center">
-                                    <div className="img-wrap">
-                                        <img
-                                            src={president?.profilePhoto ? `${API_BASE_URL}${president.profilePhoto}` : "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80"}
-                                            alt={president?.nameEn || "President"}
-                                        />
-                                    </div>
-                                    <h3 className="bn-text mt-4">{president?.nameEn || 'Rakibul Hasan'}</h3>
-                                    <p className="role text-primary font-medium">{president?.titasDesignation || 'সভাপতি'}</p>
-                                    <p className="dept text-muted text-sm mt-1">{president?.department || 'ঢাকা বিশ্ববিদ্যালয়'}</p>
-
-                                    <div className="writings-quote mt-6">
-                                        <p className="bn-text text-sm italic text-gray-600">
-                                            "তিতাস এমন একটি প্রাঙ্গণ যেখানে মেধা, মনন এবং ভ্রাতৃত্ববোধ একই সুতোয় গাঁথা। আমাদের এই পরিবার ঢাকা বিশ্ববিদ্যালয়ে অধ্যয়নরত ব্রাহ্মণবাড়িয়ার সকল শিক্ষার্থীর কল্যাণে কাজ করে যাচ্ছে।"
-                                        </p>
-                                    </div>
+                        {leaders.map((leader, i) => (
+                            <div key={i} className="committee-card-detail glass-panel text-center">
+                                <div className="img-wrap">
+                                    <img src={leader.photo} alt={leader.nameEn} />
                                 </div>
+                                <h3 className="bn-text mt-4">{leader.name}</h3>
+                                <p className="name-en text-sm" style={{ color: '#666', marginBottom: '0.25rem' }}>{leader.nameEn}</p>
+                                <p className="role text-primary font-medium">{leader.role}</p>
+                                <p className="dept text-muted text-sm mt-1">{leader.department} | সেশন: {leader.session}</p>
 
-                                {/* GENERAL SECRETARY CARD */}
-                                <div className="committee-card-detail glass-panel text-center">
-                                    <div className="img-wrap">
-                                        <img
-                                            src={secretary?.profilePhoto ? `${API_BASE_URL}${secretary.profilePhoto}` : "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=300&q=80"}
-                                            alt={secretary?.nameEn || "General Secretary"}
-                                        />
-                                    </div>
-                                    <h3 className="bn-text mt-4">{secretary?.nameEn || 'Jannatul Ferdous'}</h3>
-                                    <p className="role text-primary font-medium">{secretary?.titasDesignation || 'সাধারণ সম্পাদক'}</p>
-                                    <p className="dept text-muted text-sm mt-1">{secretary?.department || 'ঢাকা বিশ্ববিদ্যালয়'}</p>
-
-                                    <div className="writings-quote mt-6">
-                                        <p className="bn-text text-sm italic text-gray-600">
-                                            "তিতাস শুধু একটি নাম নয়, এটি আমাদের আবেগ, ভালোবাসা এবং ঐক্যের প্রতীক। আসুন কাঁধে কাঁধ মিলিয়ে ব্রাহ্মণবাড়িয়ার মুখ উজ্জ্বল করি পৃথিবীর সবখানে।"
-                                        </p>
-                                    </div>
+                                <div className="writings-quote mt-6">
+                                    <p className="bn-text text-sm italic text-gray-600">
+                                        "{leader.message}"
+                                    </p>
                                 </div>
-                            </>
-                        )}
+                            </div>
+                        ))}
                     </div>
                 </div>
             </section>

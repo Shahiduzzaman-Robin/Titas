@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 
 // Pages placeholders
 import Home from './pages/Home';
@@ -20,8 +20,11 @@ import AdminGallery from './pages/AdminGallery';
 import AdminEvents from './pages/AdminEvents';
 import AdminAuditLogs from './pages/AdminAuditLogs';
 import AdminNotifications from './pages/AdminNotifications';
-import AdminBlogComments from './pages/AdminBlogComments';
+import AdminSettings from './pages/AdminSettings';
+
 import Contact from './pages/Contact';
+import Constitution from './pages/Constitution';
+import AboutUs from './pages/AboutUs';
 import Navbar from './components/Navbar';
 
 const getAdminRole = () => {
@@ -50,8 +53,11 @@ const RequireAdminAuth = ({ children, allowedRoles = null, fallback = '/admin/bl
 };
 
 function App() {
-    return (
-        <Router>
+    const AppShell = () => {
+        const location = useLocation();
+        const isAdminRoute = location.pathname.startsWith('/admin');
+
+        return (
             <div className="app-container">
                 <Navbar />
                 <main className="main-content">
@@ -62,6 +68,8 @@ function App() {
                         <Route path="/blog" element={<Blog />} />
                         <Route path="/blog/:slug" element={<BlogPost />} />
                         <Route path="/contact" element={<Contact />} />
+                        <Route path="/constitution" element={<Constitution />} />
+                        <Route path="/about" element={<AboutUs />} />
                         <Route path="/login" element={<Login />} />
                         <Route path="/forgot-password" element={<ForgotPassword />} />
                         <Route path="/profile" element={<Profile />} />
@@ -88,13 +96,9 @@ function App() {
                         <Route path="/admin/blog" element={
                             <RequireAdminAuth allowedRoles={['Super Admin', 'Admin', 'Content Admin']}>
                                 <AdminBlog />
-                                    <Route path="/admin/blog-comments" element={
-                                        <RequireAdminAuth allowedRoles={['Super Admin', 'Admin', 'Content Admin']}>
-                                            <AdminBlogComments />
-                                        </RequireAdminAuth>
-                                    } />
                             </RequireAdminAuth>
                         } />
+                        <Route path="/admin/blog-comments" element={<Navigate to="/admin/blog" replace />} />
                         <Route path="/admin/messages" element={
                             <RequireAdminAuth allowedRoles={['Super Admin', 'Admin']}>
                                 <AdminMessages />
@@ -125,9 +129,20 @@ function App() {
                                 <AdminAuditLogs />
                             </RequireAdminAuth>
                         } />
+                        <Route path="/admin/settings" element={
+                            <RequireAdminAuth allowedRoles={['Super Admin', 'Admin', 'Content Admin']}>
+                                <AdminSettings />
+                            </RequireAdminAuth>
+                        } />
                     </Routes>
                 </main>
             </div>
+        );
+    };
+
+    return (
+        <Router>
+            <AppShell />
         </Router>
     );
 }

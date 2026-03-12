@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Globe } from 'lucide-react';
+import { Globe, Settings } from 'lucide-react';
 import axios from 'axios';
 import logo from '../assets/logo.png';
 import { API_BASE_URL } from '../constants';
+import '../styles/Admin.css';
 
 export const AdminNavbar = ({ active }) => {
     const navigate = useNavigate();
@@ -80,7 +81,6 @@ export const AdminNavbar = ({ active }) => {
                     </Link>
                 )}
                 <Link to="/admin/blog" className={`admin-nav-link bn-text ${active === 'blog' ? 'active' : ''}`}>ব্লগ ম্যানেজমেন্ট</Link>
-                                <Link to="/admin/blog-comments" className={`admin-nav-link bn-text ${active === 'blog-comments' ? 'active' : ''}`}>ব্লগ মন্তব্য</Link>
                 {!isContentAdmin && (
                     <Link to="/admin/messages" className={`admin-nav-link bn-text ${active === 'messages' ? 'active' : ''}`} style={{ position: 'relative' }}>
                         বার্তাসমূহ
@@ -111,12 +111,15 @@ export const AdminNavbar = ({ active }) => {
             <div className="admin-nav-right">
                 <button className="admin-lang-btn"><Globe size={14} /> EN</button>
                 <div className="admin-nav-user">
+                    <Link to="/admin/settings" style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', marginRight: '0.5rem' }} title="সেটিংস">
+                        <Settings size={18} />
+                    </Link>
                     <div className="admin-avatar">👤</div>
                     <div className="admin-user-info">
                         <div className="name">{(adminUser.username || 'TITAS').toUpperCase()}</div>
                         <div className="email">login@titasdu.com</div>
                     </div>
-                    <button onClick={handleLogout} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', fontSize: '0.75rem', marginLeft: '0.5rem' }}>লগআউট</button>
+                    <button onClick={handleLogout} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '0.75rem', marginLeft: '0.5rem' }}>লগআউট</button>
                 </div>
             </div>
         </nav>

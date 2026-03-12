@@ -37,6 +37,7 @@ const Footer = () => {
                             <li><Link to="/students">সদস্য তালিকা</Link></li>
                             <li><Link to="/blog">আমাদের ব্লগ</Link></li>
                             <li><Link to="/contact">যোগাযোগ করুন</Link></li>
+                            <li><Link to="/constitution">গঠনতন্ত্র</Link></li>
                         </ul>
                     </div>
 

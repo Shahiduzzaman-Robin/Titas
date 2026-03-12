@@ -3,6 +3,7 @@ const multer = require('multer');
 const path = require('path');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const rateLimit = require('express-rate-limit');
 const Student = require('../models/Student');
 const {
     sendPasswordResetOtpEmail,
@@ -12,6 +13,27 @@ const {
 
 const router = express.Router();
 const MOBILE_REGEX = /^01\d{9}$/;
+
+// Escape special regex characters to prevent ReDoS / NoSQL injection
+const escapeRegex = (str) => String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+// Rate limiter for login: 10 attempts per 15 minutes
+const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 10,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { msg: 'Too many login attempts. Please try again after 15 minutes.' },
+});
+
+// Rate limiter for OTP/forgot-password: 5 attempts per 15 minutes
+const otpLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 5,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { msg: 'Too many OTP requests. Please try again after 15 minutes.' },
+});
 
 const getRequestIpAddress = (req) => {
     const forwarded = req.headers['x-forwarded-for'];
@@ -56,7 +78,7 @@ const buildDuplicatePayload = async ({ regNo, mobile, email }) => {
 
     if (email && String(email).trim()) {
         const normalizedEmail = String(email).trim().toLowerCase();
-        const found = await Student.findOne({ email: { $regex: `^${normalizedEmail}$`, $options: 'i' } }).select('_id originalId nameBn nameEn');
+        const found = await Student.findOne({ email: { $regex: `^${escapeRegex(normalizedEmail)}$`, $options: 'i' } }).select('_id originalId nameBn nameEn');
         if (found) {
             duplicates.email = true;
             messages.email = 'এই ইমেইল দিয়ে ইতিমধ্যে নিবন্ধন করা হয়েছে।';
@@ -196,11 +218,12 @@ router.get('/', async (req, res) => {
 
         // Apply search query (name, mobile, regNo)
         if (search) {
+            const safeSearch = escapeRegex(search);
             query.$or = [
-                { nameEn: { $regex: search, $options: 'i' } },
-                { nameBn: { $regex: search, $options: 'i' } },
-                { mobile: { $regex: search, $options: 'i' } },
-                { regNo: { $regex: search, $options: 'i' } }
+                { nameEn: { $regex: safeSearch, $options: 'i' } },
+                { nameBn: { $regex: safeSearch, $options: 'i' } },
+                { mobile: { $regex: safeSearch, $options: 'i' } },
+                { regNo: { $regex: safeSearch, $options: 'i' } }
             ];
         }
 
@@ -241,7 +264,9 @@ const protect = async (req, res, next) => {
             if (!req.user) return res.status(401).json({ msg: 'User not found' });
             return next();
         } catch (error) {
-            console.error(error);
+            if (error.name === 'TokenExpiredError') {
+                return res.status(401).json({ msg: 'Token expired, please login again' });
+            }
             return res.status(401).json({ msg: 'Not authorized, token failed' });
         }
     }
@@ -253,18 +278,18 @@ const protect = async (req, res, next) => {
 // @route   POST /api/students/login
 // @desc    Auth user & get token
 // @access  Public
-router.post('/login', async (req, res) => {
+router.post('/login', loginLimiter, async (req, res) => {
     const { emailOrMobile, password } = req.body;
 
     try {
         // Find user by email or mobile
         const user = await Student.findOne({
-            $or: [{ email: emailOrMobile }, { mobile: emailOrMobile }]
+            $or: [{ email: String(emailOrMobile || '').trim() }, { mobile: String(emailOrMobile || '').trim() }]
         });
 
         if (user && (await user.matchPassword(password))) {
             const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'titas_secret_key', {
-                expiresIn: '30d',
+                expiresIn: process.env.JWT_EXPIRES_IN || '24h',
             });
 
             try {
@@ -438,12 +463,13 @@ router.get('/my-edits', async (req, res) => {
 // @route   POST /api/students/forgot-password
 // @desc    Send OTP for password reset
 // @access  Public
-router.post('/forgot-password', async (req, res) => {
+router.post('/forgot-password', otpLimiter, async (req, res) => {
     const { email } = req.body;
     try {
-        const student = await Student.findOne({ email });
+        const student = await Student.findOne({ email: String(email || '').trim().toLowerCase() });
         if (!student) {
-            return res.status(404).json({ msg: 'এই ইমেইল দিয়ে কোনো অ্যাকাউন্ট পাওয়া যায়নি।' });
+            // Return success even if not found to prevent user enumeration
+            return res.json({ msg: 'আপনার ইমেইলে ওটিপি পাঠানো হয়েছে।' });
         }
 
         // Generate 6-digit OTP
