@@ -772,365 +772,272 @@
   text-align: right;
 }
 
+/* ==========================================================================
+   Redesigned Facebook-style Comment Section
+   ========================================================================== */
 .comments-wrap {
-  margin-top: 0.8rem;
-  padding: 0.6rem;
+  margin-top: 1.5rem;
+  padding: 1.5rem;
 }
 
 .comments-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 0.9rem;
+  margin-bottom: 1.5rem;
+}
+
+.comments-header-left {
+  display: flex;
+  flex-direction: column;
 }
 
 .comments-header h3 {
   margin: 0;
   font-family: 'Hind Siliguri', sans-serif;
+  font-size: 1.25rem;
   color: #0f172a;
+  font-weight: 700;
 }
 
 .comments-header span {
   color: #64748b;
-  font-size: 0.85rem;
+  font-size: 0.9rem;
 }
 
-.comment-form {
-  display: grid;
-  gap: 0.45rem;
+.comments-sorting {
+  min-width: 160px;
 }
 
-/* Compact top input matching the design in the screenshot */
-.comment-form.compact-input {
-  background: #f1f5f9;
-  border-radius: 16px;
-  padding: 0.8rem;
-  border: 1px solid #e8edf5;
+.sorting-custom-select .react-select__control {
+  border-radius: 12px;
+  min-height: 40px;
+  font-family: inherit;
+  font-weight: 600;
+  border-color: #e2e8f0;
 }
 
-.comment-input-row {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-}
-
-.comment-input-avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
+.sorting-select option {
   background: #fff;
+  color: #050505;
+  font-weight: normal;
+}
+
+/* Comment Form */
+.comment-form-fb {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+}
+
+.comment-form-avatar {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #f0f2f5;
+  color: #1c2b33;
+  font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 700;
-  color: #2b4aa6;
-  box-shadow: 0 2px 6px rgba(15,23,42,0.06);
 }
 
-.comment-input-field {
-  flex: 1 1 auto;
-  border: none;
-  background: transparent;
-  font-size: 0.96rem;
-  padding: 0.2rem 0.4rem;
+.comment-form-main {
+  flex-grow: 1;
+}
+
+.comment-form-bubble {
+  background: #f0f2f5;
+  border-radius: 18px;
+  padding: 0.75rem 0.75rem 0.5rem;
+}
+
+.comment-form-input {
+  width: 100%;
+  min-height: 20px;
+  max-height: 150px;
+  overflow-y: auto;
   outline: none;
-}
-
-.comment-input-post {
-  background: transparent;
-  color: #0f62ff;
-  border: none;
-  font-weight: 700;
-}
-
-.comment-input-actions {
-  margin-top: 0.45rem;
-  display: flex;
-  gap: 1rem;
-  color: #6b7a90;
   font-size: 0.95rem;
+  line-height: 1.4;
+  color: #050505;
 }
 
-/* Provided target design overrides */
-body {
-  background-color: #f0f2f5;
-}
-
-.input-box:empty:before {
+.comment-form-input:empty::before {
   content: attr(data-placeholder);
   color: #65676b;
 }
 
-.comment-input-row-outer { margin-bottom: 0.25rem; }
-
-.comment-bubble { background-color: #f0f2f5; border-radius: 18px; position: relative; }
-.like-badge { background: #fff; border-radius: 12px; box-shadow: 0 8px 22px rgba(237,47,97,0.06); display: inline-flex; align-items: center; gap:6px; padding: 6px 8px; position: absolute; right: -14px; top: 8px; font-size: 13px; color: #111827; border: 1px solid rgba(237,47,97,0.06); }
-.like-badge .heart { color: #ef476f; font-size: 14px; }
-.like-badge.show { display: inline-flex; }
-.like-badge.hidden { display: none; }
-.loved { color: #f33e58 !important; font-weight: 700; }
-
-/* inset small square inside bubble */
-.comment-inset { display: inline-block; background: #eef6fa; border-radius: 10px; padding: 10px 12px; margin-top: 8px; color: #111827; font-size: 0.95rem; }
-
-/* Dark rectangular Post button to match target */
-.post-btn-dark { background: #0f172a; color: #fff; padding: 6px 10px; border-radius: 8px; font-weight: 700; border: none; }
-
-/* full width divider between comments */
-.comment-list > article + article { border-top: 1px solid #eef2f6; padding-top: 18px; margin-top: 18px; }
-
-.comment-form input,
-.comment-form textarea {
-  border: 1px solid #e3e9f3;
-  background: #fbfdff;
-  border-radius: 8px;
-  padding: 0.5rem 0.6rem;
-  font-size: 0.88rem;
-  color: #0f172a;
+.comment-form-divider {
+  height: 1px;
+  background: rgba(0, 0, 0, 0.05);
+  margin: 0.5rem 0;
 }
 
-.comment-form textarea {
-  resize: vertical;
-}
-
-.comment-form button {
-  justify-self: start;
-  border: none;
-  background: #0f172a;
-  color: #fff;
-  border-radius: 6px;
-  padding: 0.44rem 0.7rem;
-  font-weight: 600;
-  font-size: 0.9rem;
-}
-
-.comment-list {
-  margin-top: 0.6rem;
-  display: grid;
-  gap: 0.48rem;
-}
-
-/* Override admin/global comment card styles so comments remain compact
-   and visually inline inside the post. Use higher specificity so this
-   wins if Admin.css is loaded afterwards. */
-.comments-wrap .comment-list,
-.comments-wrap .comment-item {
-  background: transparent !important;
-  border: none !important;
-  border-radius: 0 !important;
-  box-shadow: none !important;
-}
-
-
-
-.comments-wrap .comment-item + .comment-item {
-  border-top: 1px solid #edf2f8 !important;
-  padding-top: 0.5rem !important;
-  margin-top: 0.4rem !important;
-}
-
-.comment-item {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.5rem 0;
-  border-top: 1px solid #f1f5f9;
-}
-
-.comment-item.fb-style { padding: 0.6rem 0; }
-
-.comment-avatar {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background: #f3f6ff;
-  color: #3558b6;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 0.82rem;
-}
-
-/* Bubble style for comments */
-.comment-item.bubble {
-  display: flex;
-  gap: 0.8rem;
-  padding: 0.6rem 0;
-  align-items: flex-start;
-}
-
-.comment-main { flex: 1 1 auto; }
-
-.comment-bubble {
-  position: relative;
-  background: #f1f5f8;
-  border-radius: 16px;
-  padding: 0.7rem 1rem;
-  box-shadow: none;
-}
-
-.comment-bubble-inner { display: block; }
-
-.comment-bubble-header { margin-bottom: 0.25rem; }
-
-.comment-author { font-weight: 700; color: #0f172a; font-size: 0.98rem; }
-
-.comment-text { color: #0f172a; font-size: 1rem; line-height: 1.4; margin: 0; }
-
-/* Floating reaction badge */
-.reaction-badge {
-  position: absolute;
-  right: -12px;
-  top: 10px;
-  transform: translateY(0);
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  background: #ffffff;
-  border-radius: 999px;
-  padding: 6px 8px;
-  box-shadow: 0 6px 18px rgba(15,23,42,0.08);
-  border: 1px solid rgba(15,23,42,0.06);
-  cursor: pointer;
-  color: #ef476f;
-  font-weight: 700;
-}
-
-.reaction-badge .heart { color: #ef476f; font-size: 0.95rem; }
-.reaction-badge .reaction-count { color: #111827; font-size: 0.92rem; }
-.reaction-badge.is-loved { background: #fff0f3; border-color: rgba(237, 47, 97, 0.12); }
-
-.comment-meta-row {
-  display: flex;
-  gap: 1rem;
-  margin-top: 0.45rem;
-  align-items: center;
-}
-
-.love-label { color: #6b7a90; font-weight: 700; font-size: 0.92rem; }
-.love-label.is-loved { color: #ef476f; }
-.comment-time { color: #6b7a90; font-size: 0.86rem; }
-
-.comment-left { flex: 0 0 34px; }
-.comment-main { flex: 1 1 auto; display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap; }
-.comment-author { font-weight:700; color:#0f172a; margin-right:0.4rem; }
-.comment-text { color:#374151; }
-
-.comment-right { display:flex; align-items:center; gap:0.4rem; flex:0 0 auto; }
-.comment-right .like-btn { background:transparent; border:none; color:#6b7280; cursor:pointer; font-weight:700; }
-.comment-right .like-btn:hover { color:#e11d48; }
-.like-count { font-size:0.92rem; color:#6b7280; }
-
-.related-posts-wrap {
-  margin-top: 3.5rem !important;
-  padding: 1.2rem;
-  position: relative;
-  border-top: 1px solid #e8edf5;
-  padding-top: 2rem !important;
-}
-
-.related-posts-header {
-  margin-bottom: 1rem;
+.comment-form-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-.related-posts-header h3 {
-  margin: 0;
-  font-family: 'Hind Siliguri', sans-serif;
-  color: #0f172a;
+.comment-form-actions {
+  display: flex;
+  gap: 0.5rem;
 }
 
-.related-view-all {
-  color: #4a5c78;
+.action-btn {
+  background: transparent;
+  border: none;
+  padding: 4px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.2s;
+  color: #65676b;
+}
+
+.action-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.comment-post-btn {
+  background: transparent;
+  border: none;
+  color: #0866ff;
+  font-weight: 600;
   font-size: 0.9rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
 }
 
-@media (max-width: 860px) {
-  .post-nav-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .post-nav-card.align-right {
-    align-items: flex-start;
-    text-align: left;
-  }
+.comment-post-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
 }
 
-@media (max-width: 680px) {
-  .post-header-card,
-  .post-content-card,
-  .comments-wrap,
-  .related-posts-wrap {
-    border-radius: 14px;
-    padding: 0.9rem;
-  }
-
-  .author-box {
-    grid-template-columns: 1fr;
-  }
-
-  .author-avatar {
-    width: 44px;
-    height: 44px;
-  }
+/* Comment List */
+.comment-list-fb {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
 }
 
-/* Compact comments styling: reduce vertical space per comment */
-.comments-wrap {
-  padding: 0.45rem;
+.comment-item-fb {
+  display: flex;
+  gap: 0.75rem;
 }
 
-.comments-wrap .comment-list {
-  gap: 0.28rem;
+.comment-avatar-fb {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #f0f2f5;
+  color: #1c2b33;
+  font-weight: 700;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* Reduce avatar size, tighten grid, and shrink paddings */
-.comments-wrap .comment-item {
-  grid-template-columns: 28px 1fr;
-  gap: 0.35rem;
-  padding: 0.28rem 0;
-  border-top: none;
+.comment-content-fb {
+  flex-grow: 1;
 }
 
-/* Ensure a subtle divider but with minimal vertical impact */
-.comments-wrap .comment-item + .comment-item {
-  border-top: 1px solid #edf2f8 !important;
-  padding-top: 0.28rem !important;
-  margin-top: 0 !important;
+.comment-bubble-fb {
+  position: relative;
+  background: #f0f2f5;
+  border-radius: 18px;
+  padding: 0.5rem 0.75rem;
+  display: inline-block;
+  max-width: 90%;
 }
 
-.comments-wrap .comment-avatar {
-  width: 28px !important;
-  height: 28px !important;
-  font-size: 0.78rem !important;
+.comment-author-fb {
+  display: block;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #050505;
+  margin-bottom: 0.1rem;
 }
 
-.comments-wrap .comment-meta {
-  gap: 0.35rem;
-}
-
-.comments-wrap .comment-meta strong {
-  font-size: 0.92rem;
-}
-
-.comments-wrap .comment-meta span {
-  font-size: 0.74rem;
-  color: #6b7a90;
-}
-
-.comments-wrap .comment-item p {
-  margin: 0.12rem 0 0;
-  font-size: 0.88rem;
+.comment-text-fb {
+  margin: 0;
+  font-size: 0.95rem;
   line-height: 1.4;
-  color: #374151;
+  color: #050505;
+  white-space: pre-wrap;
 }
 
-/* Make the comment form compact on mobile as well */
-.comments-wrap .comment-form input,
-.comments-wrap .comment-form textarea {
-  padding: 0.42rem 0.5rem;
-  font-size: 0.88rem;
+/* Reaction Badge */
+.comment-reaction-badge {
+  position: absolute;
+  right: -10px;
+  bottom: -10px;
+  background: #ffffff;
+  border-radius: 999px;
+  padding: 2px 4px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+  cursor: pointer;
+  z-index: 2;
+  border: 0.5px solid #e4e6eb;
+}
+
+.reaction-icon {
+  font-size: 0.85rem;
+}
+
+.reaction-count {
+  font-size: 0.75rem;
+  color: #65676b;
+  font-weight: 500;
+}
+
+/* Meta Data */
+.comment-meta-fb {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+  margin-left: 0.5rem;
+  font-size: 0.75rem;
+  color: #65676b;
+}
+
+.meta-action-btn {
+  background: transparent;
+  border: none;
+  font-weight: 700;
+  color: #65676b;
+  cursor: pointer;
+  padding: 0;
+}
+
+.meta-action-btn:hover {
+  text-decoration: underline;
+}
+
+.meta-action-btn.active {
+  color: #f33e58;
+}
+
+.meta-dot {
+  font-weight: normal;
+}
+
+@media (max-width: 480px) {
+  .comment-bubble-fb {
+    max-width: 100%;
+  }
+}
+
+.related-posts-wrap {
+  margin-top: 4rem !important;
+  padding-top: 3rem !important;
+  border-top: 1px solid #eef2f6;
 }

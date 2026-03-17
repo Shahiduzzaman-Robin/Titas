@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import axios from 'axios';
+import CustomSelect from '../components/CustomSelect';
 import { API_BASE_URL } from '../constants';
 import { Calendar, User, Tag, Eye, Facebook, Linkedin, MessageCircle, Clock3, ArrowLeft, ArrowRight } from 'lucide-react';
 import '../styles/Blog.css';
@@ -45,6 +46,7 @@ const BlogPost = () => {
     const [related, setRelated] = useState([]);
     const [adjacentPosts, setAdjacentPosts] = useState({ previous: null, next: null });
     const [comments, setComments] = useState([]);
+    const [sortBy, setSortBy] = useState('relevant'); // 'relevant', 'newest', 'oldest'
     const [commentForm, setCommentForm] = useState({ name: '', text: '' });
     const [loading, setLoading] = useState(true);
     const [submittingComment, setSubmittingComment] = useState(false);
@@ -127,6 +129,18 @@ const BlogPost = () => {
     const shareUrl = window.location.href;
     const sharePreviewUrl = `${BACKEND_BASE}/share/blog/${encodeURIComponent(slug || '')}`;
     const shareTitle = post ? encodeURIComponent(post.title) : '';
+
+    const sortedComments = useMemo(() => {
+        const items = [...comments];
+        if (sortBy === 'relevant') {
+            return items.sort((a, b) => (b.likes || 0) - (a.likes || 0));
+        } else if (sortBy === 'newest') {
+            return items.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        } else if (sortBy === 'oldest') {
+            return items.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+        }
+        return items;
+    }, [comments, sortBy]);
 
     const shareLinks = [
         {
@@ -298,28 +312,7 @@ const BlogPost = () => {
                                         <span key={tag._id} className="taxonomy-chip">#{tag.name}</span>
                                     ))}
                                 </div>
-                                                <div className="comment-bubble px-3 py-2">
-                                                    <div className="comment-bubble-header">
-                                                        <span className="comment-author">{item.name}</span>
-                                                    </div>
-                                                    <div className="comment-inset">{item.text}</div>
-
-                                                    <button
-                                                        type="button"
-                                                        className={`like-badge ${isLiked ? 'show' : ''}`}
-                                                        onClick={() => handleLike(item)}
-                                                        aria-label="Like comment"
-                                                    >
-                                                        <span className="heart">❤️</span>
-                                                        <span className="like-count">{item.likes || 0}</span>
-                                                    </button>
-                                                </div>
-
-                                                <div className="comment-meta-row">
-                                                    <span className={`love-label ${isLiked ? 'is-loved' : ''}`}>{isLiked ? 'Loved' : 'Love'}</span>
-                                                    <span className="comment-time">{timeAgo(item.createdAt)}</span>
-                                                </div>
-                            </div>
+                            )}
                         </div>
                     </section>
                 </article>
@@ -344,19 +337,35 @@ const BlogPost = () => {
 
                 <section className="comments-wrap modern-surface">
                     <div className="comments-header">
-                        <h3>Comments</h3>
-                        <span>{comments.length} discussion{comments.length > 1 ? 's' : ''}</span>
+                        <div className="comments-header-left">
+                            <h3>Comments</h3>
+                            <span>{comments.length} discussion{comments.length !== 1 ? 's' : ''}</span>
+                        </div>
+                        <div className="comments-sorting">
+                            <CustomSelect 
+                                value={sortBy} 
+                                onChange={(e) => setSortBy(e.target.value)}
+                                options={[
+                                    { value: 'relevant', label: 'Most Relevant' },
+                                    { value: 'newest', label: 'Newest' },
+                                    { value: 'oldest', label: 'Oldest' }
+                                ]}
+                                className="sorting-custom-select"
+                                required
+                            />
+                        </div>
                     </div>
 
-                    <div className="comment-form compact-input">
-                        <div className="flex gap-2 mb-2 comment-input-row-outer">
-                            <div className="comment-input-avatar">{String(commentForm.name || 'U').charAt(0).toUpperCase()}</div>
-                            <div className="flex-1 bg-[#f0f2f5] rounded-2xl px-3 py-2">
+                    <div className="comment-form-fb">
+                        <div className="comment-form-avatar">
+                            {String(commentForm.name || 'U').charAt(0).toUpperCase()}
+                        </div>
+                        <div className="comment-form-main">
+                            <div className="comment-form-bubble">
                                 <div
                                     ref={mainInputRef}
-                                    id="mainInput"
                                     contentEditable
-                                    className="input-box outline-none text-[15px] min-h-[20px]"
+                                    className="comment-form-input"
                                     data-placeholder="Write a comment..."
                                     onKeyDown={(e) => {
                                         if (e.key === 'Enter' && !e.shiftKey) {
@@ -365,15 +374,14 @@ const BlogPost = () => {
                                         }
                                     }}
                                 />
-                                <div className="flex justify-between items-center mt-2 border-t border-gray-300 pt-2">
-                                    <div className="flex gap-3 text-gray-500 text-sm">
-                                        <span className="cursor-pointer hover:bg-gray-200 p-1 rounded">😊</span>
-                                        <span className="cursor-pointer hover:bg-gray-200 p-1 rounded">📷</span>
-                                        <span className="cursor-pointer hover:bg-gray-200 p-1 rounded">GIF</span>
+                                <div className="comment-form-divider" />
+                                <div className="comment-form-footer">
+                                    <div className="comment-form-actions">
+                                        {/* Actions could be added here in the future (Emojis, Photos, etc.) */}
                                     </div>
-                                    <button
+                                    <button 
+                                        className="comment-post-btn"
                                         onClick={() => handlePost()}
-                                        className="text-[#1877f2] font-semibold text-sm px-2 py-1 hover:bg-blue-50 rounded transition"
                                     >
                                         Post
                                     </button>
@@ -382,40 +390,40 @@ const BlogPost = () => {
                         </div>
                     </div>
 
-                    <div className="comment-list">
-                        {comments.map((item) => {
+                    <div className="comment-list-fb">
+                        {sortedComments.map((item) => {
                             const cid = item.id || item._id;
                             const likedByServer = item.likedBy || [];
                             const isLiked = clientId && likedByServer.includes(clientId);
                             return (
-                                <article key={cid} className="comment-item bubble">
-                                    <div className="comment-left">
-                                        <div className="comment-avatar">{String(item.name || 'U').charAt(0).toUpperCase()}</div>
+                                <article key={cid} className="comment-item-fb">
+                                    <div className="comment-avatar-fb">
+                                        {String(item.name || 'U').charAt(0).toUpperCase()}
                                     </div>
-
-                                    <div className="comment-main">
-                                        <div className="comment-bubble">
-                                            <div className="comment-bubble-inner">
-                                                <div className="comment-bubble-header">
-                                                    <span className="comment-author">{item.name}</span>
+                                    <div className="comment-content-fb">
+                                        <div className="comment-bubble-fb">
+                                            <span className="comment-author-fb">{item.name}</span>
+                                            <p className="comment-text-fb">{item.text}</p>
+                                            
+                                            {(item.likes > 0 || isLiked) && (
+                                                <div 
+                                                    className="comment-reaction-badge"
+                                                    onClick={() => handleLike(item)}
+                                                >
+                                                    <span className="reaction-icon">❤️</span>
+                                                    <span className="reaction-count">{item.likes || 0}</span>
                                                 </div>
-                                                <div className="comment-text">{item.text}</div>
-                                            </div>
-
-                                            <button
-                                                type="button"
-                                                className={`reaction-badge ${isLiked ? 'is-loved' : ''}`}
-                                                onClick={() => handleLike(item)}
-                                                aria-label="Like comment"
-                                            >
-                                                <span className="heart">♥</span>
-                                                <span className="reaction-count">{item.likes || 0}</span>
-                                            </button>
+                                            )}
                                         </div>
-
-                                        <div className="comment-meta-row">
-                                            <span className={`love-label ${isLiked ? 'is-loved' : ''}`}>{isLiked ? 'Loved' : 'Love'}</span>
-                                            <span className="comment-time">{timeAgo(item.createdAt)}</span>
+                                        <div className="comment-meta-fb">
+                                            <button 
+                                                className={`meta-action-btn ${isLiked ? 'active' : ''}`}
+                                                onClick={() => handleLike(item)}
+                                            >
+                                                {isLiked ? 'Loved' : 'Love'}
+                                            </button>
+                                            <span className="meta-dot">•</span>
+                                            <span className="comment-time-fb">{timeAgo(item.createdAt)}</span>
                                         </div>
                                     </div>
                                 </article>
