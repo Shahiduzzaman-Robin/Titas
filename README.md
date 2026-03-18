@@ -21,7 +21,11 @@ A fully searchable and filterable directory with real-time API integration. Supp
 
 ### ✍️ Premium Blog Engine
 Full-featured journalism platform with dynamic SEO meta tags (OpenGraph), view counting, and a specialized rich-text editor for administrators.
-![Blog List](docs/screenshots/blog_list.png)
+![Blog Grid Redesign](docs/screenshots/premium_blog_grid.png)
+
+### 📚 Cinematic Reading Experience
+Distraction-free, centered reading layout with elegant glassmorphism containers and refined typography.
+![Blog Detail Redesign](docs/screenshots/premium_blog_detail.png)
 
 ---
 

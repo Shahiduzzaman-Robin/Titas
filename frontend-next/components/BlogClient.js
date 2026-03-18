@@ -94,8 +94,12 @@ export default function BlogClient({
                 </div>
 
                 <div className={`posts-grid ${isPending ? 'opacity-50' : ''}`}>
-                    {posts.map((post) => (
-                        <article key={post._id} className="blog-card modern-surface">
+                    {posts.map((post, index) => (
+                        <article 
+                            key={post._id} 
+                            className="blog-card modern-surface animate-in"
+                            style={{ animationDelay: `${index * 0.1}s` }}
+                        >
                             <Link href={`/blog/${post.slug}`} className="card-link">
                                 <div className="blog-card-image-wrap">
                                     <img
@@ -105,7 +109,7 @@ export default function BlogClient({
                                     />
                                 </div>
                                 <div className="blog-card-body">
-                                    <span className="post-category-pill subtle">{post.category?.name || 'General'}</span>
+                                    <span className="post-category-pill glass-pill">{post.category?.name || 'General'}</span>
                                     <h3>{post.title}</h3>
                                     <p>{post.excerpt}</p>
                                     <div className="card-footer">
