@@ -1,0 +1,15 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/committee/layout,_N_T_/committee/page,_N_T_/committee"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/committee/__PAGE__",
+    "/committee",
+    "/_index",
+    "/_head"
+  ]
+}

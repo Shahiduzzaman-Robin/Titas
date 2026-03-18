@@ -1,0 +1,35 @@
+/* [project]/app/lisubha_953a793e.module.css [app-client] (css) */
+@font-face {
+  font-family: liSubha;
+  src: url("../media/Li Subha Letterpress Unicode-s.p.83b88623.ttf") format("truetype");
+  font-display: swap;
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: liSubha;
+  src: url("../media/Li Subha Letterpress Unicode Italic-s.p.41e5ef3d.ttf") format("truetype");
+  font-display: swap;
+  font-weight: 400;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: liSubha Fallback;
+  src: local(Arial);
+  ascent-override: 117.36%;
+  descent-override: 31.3%;
+  line-gap-override: 0.0%;
+  size-adjust: 88.19%;
+}
+
+.lisubha_953a793e-module__123vkq__className {
+  font-family: liSubha, liSubha Fallback;
+}
+
+.lisubha_953a793e-module__123vkq__variable {
+  --font-li-subha: "liSubha", "liSubha Fallback";
+}
+
+/*# sourceMappingURL=app_lisubha_953a793e_module_css_bad6b30c._.single.css.map*/

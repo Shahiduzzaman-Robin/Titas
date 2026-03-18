@@ -1,146 +1,47 @@
-# Titas DU Student Portal
+# Titas Community Hub (Next.js)
 
-Community platform for Dhaka University students from Brahmanbaria (Titas), built with React, Node.js, Express, and MongoDB.
+A complete community management system for Dhaka University students from Brahmanbaria, migrated to **Next.js 15+** for superior performance and SEO.
 
-## Overview
+## Project Structure
 
-This project includes:
-- A public-facing website (home, blog, contact, events, gallery, student directory)
-- A protected admin area (content management, student approvals, inbox/messages)
-- A backend API with MongoDB storage
+- **frontend-next/**: The modern Next.js frontend using App Router and Server Components.
+- **backend/**: The Node.js/Express API server (Port 5010).
+- **legacy-react-frontend/**: The original React-Vite project (archived).
 
-## Core Features
+## Key Features
 
-### Student Directory
-- Search by name, registration number, or phone
-- Profile details (department, session, hall, batch)
-- Privacy-minded phone masking on server side
+- **SEO Optimized**: Server-side rendering for blog posts and dynamic sitemap.
+- **Admin Dashboard**: Comprehensive management for students, blogs, events, and notices.
+- **Student Profiles**: Secure registration and profile management with privacy masking.
+- **Responsive**: Fully optimized for mobile and desktop views.
 
-### Blog and Content
-- Rich text blog posting with media support
-- Categories and tags
-- Social-share friendly preview endpoint
+## Quick Start
 
-### Notices and Communication
-- Scrolling urgent notice ticker on homepage
-- Contact form with admin-side message management
-
-### Events, Gallery, Community
-- Public event listing and gallery
-- Executive committee and testimonials sections
-- Responsive homepage components
-
-### Admin Panel
-- Approve/manage students
-- Manage blog posts, notices, events, gallery items
-- Review incoming contact messages
-
-## Tech Stack
-
-- Frontend: React, Vite, React Router, Axios, Lucide Icons
-- Backend: Node.js, Express, Mongoose
-- Database: MongoDB
-- Auth/Security: JWT, bcrypt
-
-## Prerequisites
-
-- Node.js 18+
-- npm
-- MongoDB (local or remote)
-
-## Environment Variables
-
-Create backend/.env with at least:
-
-| Variable | Required | Example |
-|---|---|---|
-| PORT | No | 5010 |
-| MONGO_URI | Yes | mongodb://127.0.0.1:27017/titas_clone |
-| JWT_SECRET | Yes | change_this_secret |
-| FRONTEND_URL | No | http://localhost:5173 |
-| BACKEND_URL | No | http://localhost:5010 |
-
-## Local Development
-
-1. Clone and install dependencies
-
-```bash
-git clone https://github.com/Shahiduzzaman-Robin/Titas.git
-cd Titas
-
-cd backend && npm install
-cd ../frontend && npm install
-```
-
-2. Start backend
-
+### 1. Start the Backend
 ```bash
 cd backend
+npm install
 npm run dev
 ```
 
-3. Start frontend (new terminal)
-
+### 2. Start the Next.js Frontend
 ```bash
-cd frontend
+cd frontend-next
+npm install
 npm run dev
 ```
 
-## Default Local URLs
+Visit: [http://localhost:3000](http://localhost:3000)
 
-- Frontend: http://localhost:5173/
-- Backend: http://localhost:5010/
-- API sample: http://localhost:5010/api/blog/posts
+## Build for Production
+```bash
+cd frontend-next
+npm run build
+npm start
+```
 
-## Available Scripts
+## API Groups
+- `/api/students`, `/api/blog`, `/api/admin`, `/api/events`, `/api/notices`
 
-### Backend
-- npm run dev
-- npm start
-- npm run seed:blog-demo
-
-### Frontend
-- npm run dev
-- npm run build
-- npm run preview
-
-## API Route Groups
-
-- /api/students
-- /api/admin
-- /api/blog
-- /api/contact
-- /api/notices
-- /api/gallery
-- /api/events
-
-Share/preview route:
-- /share/blog/:slug
-
-## Recent Updates (March 10, 2026)
-
-- Redesigned homepage Alumni Spotlight section
-- Improved dark-section contrast and card readability
-- Added alumni impact stat chips
-- Improved mobile spacing and typography for spotlight cards
-- Corrected CTA text to Explore Alumni Directory
-- Updated project documentation and run instructions
-
-## Screenshots
-
-### Home Page
-![Home Page](screenshots/home.png)
-
-### Student Directory
-![Student Directory](screenshots/directory.png)
-
-### Login
-![Login Page](screenshots/login.png)
-
-### Admin Dashboard
-![Admin Dashboard](screenshots/admin.png)
-
-### Blog
-![Blog Page](screenshots/blog.png)
-
-Developed as part of the Titas DU digital transformation effort.
+---
+Developed for the Titas DU Digital Transformation.

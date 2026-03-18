@@ -1,0 +1,215 @@
+.register-page {
+    background-color: white;
+    min-height: calc(100vh - 70px);
+}
+
+.register-form {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 2rem;
+}
+
+.fields-column {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+}
+
+.register-page .form-group {
+    margin-bottom: 0.8rem;
+}
+
+.register-page .form-label {
+    margin-bottom: 0.32rem;
+    line-height: 1.2;
+}
+
+.register-page .form-input {
+    border: 1px solid #d7e0eb;
+}
+
+.register-page .form-input:focus {
+    border-color: #b9c8dd;
+}
+
+.row {
+    display: flex;
+    gap: 1rem;
+}
+
+.row>.form-group {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+.employed-fields-row {
+    margin-top: 0.35rem;
+}
+
+.field-feedback {
+    font-size: 0.82rem;
+    margin-top: 0.45rem;
+    line-height: 1.4;
+}
+
+.field-feedback.checking {
+    color: #475569;
+}
+
+.field-feedback.error {
+    color: #b91c1c;
+    font-weight: 600;
+}
+
+.duplicate-record-card {
+    border: 3px solid #f3d86c;
+    border-radius: 18px;
+    background: #fdf7e6;
+    color: #9a4718;
+    padding: 1rem 1.1rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+}
+
+.duplicate-record-icon {
+    width: 56px;
+    height: 56px;
+    min-width: 56px;
+    border-radius: 999px;
+    background: #f7e7b1;
+    color: #9a4718;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.duplicate-record-content h3 {
+    margin: 0 0 0.2rem;
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #9a4718;
+}
+
+.duplicate-record-content p {
+    margin: 0 0 0.2rem;
+    font-size: 0.9rem;
+    color: #a34b1a;
+    line-height: 1.35;
+}
+
+.duplicate-badge {
+    display: inline-block;
+    background: #f2df87;
+    color: #7c340f;
+    border-radius: 10px;
+    padding: 0.08rem 0.45rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+}
+
+.duplicate-record-note {
+    color: #bc5a1d;
+    font-style: italic;
+    font-weight: 600;
+    margin-top: 0.05rem;
+}
+
+/* Photo Upload */
+.photo-column {
+    padding-top: 1.5rem;
+    /* Align with input fields */
+}
+
+.upload-box {
+    width: 100%;
+    aspect-ratio: 3/4;
+    border: 2px dashed #cbd5e1;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    overflow: hidden;
+    position: relative;
+    background-color: #f8fafc;
+}
+
+.upload-box:hover {
+    border-color: var(--accent-blue);
+    background-color: #f1f5f9;
+}
+
+.upload-placeholder {
+    height: 100%;
+    width: 100%;
+}
+
+.preview-container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+.photo-preview {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.change-photo {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    color: white;
+    text-align: center;
+    padding: 0.5rem;
+    font-size: 0.875rem;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.upload-box:hover .change-photo {
+    opacity: 1;
+}
+
+@media (max-width: 768px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .row {
+        flex-direction: column;
+    }
+
+    .upload-box {
+        aspect-ratio: 16/9;
+    }
+
+    .duplicate-record-card {
+        padding: 1rem;
+        border-width: 2px;
+        border-radius: 14px;
+        align-items: flex-start;
+    }
+
+    .duplicate-record-icon {
+        width: 54px;
+        height: 54px;
+        min-width: 54px;
+    }
+
+    .duplicate-record-content h3 {
+        font-size: 1.15rem;
+    }
+
+    .duplicate-record-content p {
+        font-size: 0.96rem;
+    }
+}

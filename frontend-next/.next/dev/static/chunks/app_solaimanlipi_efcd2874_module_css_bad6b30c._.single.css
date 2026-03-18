@@ -1,0 +1,27 @@
+/* [project]/app/solaimanlipi_efcd2874.module.css [app-client] (css) */
+@font-face {
+  font-family: solaimanLipi;
+  src: url("../media/SolaimanLipi-s.p.f78e091c.ttf") format("truetype");
+  font-display: swap;
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: solaimanLipi Fallback;
+  src: local(Arial);
+  ascent-override: 86.28%;
+  descent-override: 29.3%;
+  line-gap-override: 0.0%;
+  size-adjust: 100.0%;
+}
+
+.solaimanlipi_efcd2874-module__Qkt5-q__className {
+  font-family: solaimanLipi, solaimanLipi Fallback;
+}
+
+.solaimanlipi_efcd2874-module__Qkt5-q__variable {
+  --font-solaiman: "solaimanLipi", "solaimanLipi Fallback";
+}
+
+/*# sourceMappingURL=app_solaimanlipi_efcd2874_module_css_bad6b30c._.single.css.map*/

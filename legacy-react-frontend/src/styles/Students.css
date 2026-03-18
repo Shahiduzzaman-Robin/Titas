@@ -1,0 +1,257 @@
+.students-page {
+    background-color: var(--bg-color);
+    min-height: calc(100vh - 70px);
+}
+
+.page-header {
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 1rem;
+}
+
+.student-count {
+    background-color: #e0f2fe;
+    color: #0369a1;
+    padding: 0.2rem 0.8rem;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    margin-left: 1rem;
+    font-weight: 600;
+}
+
+.search-box {
+    position: relative;
+    width: 300px;
+}
+
+.search-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+}
+
+.search-input {
+    width: 100%;
+    padding: 0.6rem 1rem 0.6rem 2.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    background-color: white;
+    outline: none;
+}
+
+.search-input:focus {
+    border-color: var(--border-color);
+}
+
+/* Filters Capsule */
+.filters-capsule {
+    background-color: white;
+    padding: 0.5rem;
+    border-radius: 12px;
+    border: 1px solid #f1f5f9;
+    box-shadow: 0 4px 15px -10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2.5rem;
+}
+
+.filters-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.filter-item {
+    flex: 1;
+}
+
+.dept-f {
+    flex: 1.2;
+}
+
+.session-f {
+    flex: 0.8;
+}
+
+.hall-f {
+    flex: 1.1;
+}
+
+.blood-f {
+    flex: 0.7;
+}
+
+.upazila-f {
+    flex: 0.9;
+}
+
+.filter-train-container {
+    width: 140px;
+    height: 44px;
+    overflow: hidden;
+    position: relative;
+    border-left: 1px solid #f1f5f9;
+    padding-left: 0.5rem;
+}
+
+.filter-train {
+    height: 44px !important;
+    min-width: 140px !important;
+}
+
+.filter-train .moving-train {
+    height: 24px !important;
+    bottom: 12px !important;
+    animation: slideTrain 6s linear infinite !important;
+}
+
+.filter-train .track-rail,
+.filter-train .sleeper {
+    bottom: 8px !important;
+}
+
+/* Grid */
+.student-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5rem;
+}
+
+/* Card */
+.student-card {
+    display: flex;
+    flex-direction: column;
+    padding: 1.5rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.student-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.card-profile {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    position: relative;
+    margin-bottom: 1.25rem;
+}
+
+.profile-img,
+.profile-placeholder {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.bg-gray {
+    background-color: #f3f4f6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.text-gray {
+    color: #9ca3af;
+}
+
+.profile-info h3 {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    margin-bottom: 0.25rem;
+}
+
+.profile-meta {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    gap: 0.5rem;
+}
+
+.blood-badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background-color: #fee2e2;
+    color: var(--accent-red);
+    padding: 0.2rem 0.6rem;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.card-details {
+    background-color: #f8fafc;
+    padding: 1rem;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+    flex: 1;
+}
+
+.detail-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    font-size: 0.9rem;
+}
+
+.role-item {
+    margin-bottom: 0.5rem;
+}
+
+.primary-text {
+    font-weight: 600;
+    color: var(--accent-blue);
+}
+
+.secondary-text {
+    font-size: 0.8rem;
+    color: var(--accent-blue);
+    opacity: 0.8;
+}
+
+.text-blue {
+    color: var(--accent-blue);
+}
+
+.card-contact {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.contact-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+}
+
+@media (max-width: 768px) {
+    .hidden-mobile {
+        display: none;
+    }
+
+    .page-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+    }
+
+    .search-box {
+        width: 100%;
+    }
+
+    .student-grid {
+        grid-template-columns: 1fr;
+    }
+}

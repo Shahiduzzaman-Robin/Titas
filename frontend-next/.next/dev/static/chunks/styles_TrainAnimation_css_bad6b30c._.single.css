@@ -1,0 +1,65 @@
+/* [project]/styles/TrainAnimation.css [app-client] (css) */
+.train-graphic-container {
+  background-color: #0000;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  min-width: 200px;
+  height: 60px;
+  display: flex;
+  position: relative;
+  overflow: hidden;
+}
+
+.train-track-area {
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  position: relative;
+}
+
+.moving-train {
+  z-index: 10;
+  filter: drop-shadow(0 2px 4px #0000001a);
+  height: 32px;
+  animation: 12s linear infinite slideTrain;
+  position: absolute;
+  bottom: 20px;
+  left: 0;
+}
+
+@keyframes slideTrain {
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(320px);
+  }
+}
+
+.track-rail {
+  background-color: #cbd5e1;
+  width: 100%;
+  height: 2px;
+  position: absolute;
+  bottom: 18px;
+}
+
+.track-sleepers {
+  justify-content: space-around;
+  width: 100%;
+  display: flex;
+  position: absolute;
+  bottom: 14px;
+}
+
+.sleeper {
+  background-color: #cbd5e1;
+  width: 2px;
+  height: 6px;
+}
+
+/*# sourceMappingURL=styles_TrainAnimation_css_bad6b30c._.single.css.map*/

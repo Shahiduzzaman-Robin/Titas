@@ -1,0 +1,22 @@
+{
+  "pages": {},
+  "app": {
+    "[project]/app/blog/[slug]/page": [
+      "static/media/Li_Ador_Noirrit_ExtraLight-s.p.9e02ec72.ttf",
+      "static/media/Li_Ador_Noirrit_Light-s.p.0043e890.ttf",
+      "static/media/Li_Ador_Noirrit_Regular-s.p.1323c715.ttf",
+      "static/media/Li_Ador_Noirrit_SemiBold-s.p.2dcc0625.ttf",
+      "static/media/Li_Ador_Noirrit_Bold-s.p.4b57cbef.ttf",
+      "static/media/SolaimanLipi-s.p.f78e091c.ttf",
+      "static/media/Li Subha Letterpress Unicode-s.p.83b88623.ttf",
+      "static/media/Li Subha Letterpress Unicode Italic-s.p.41e5ef3d.ttf",
+      "static/media/HindSiliguri_Light-s.p.974baa0c.ttf",
+      "static/media/HindSiliguri_Regular-s.p.83634f9a.ttf",
+      "static/media/HindSiliguri_Medium-s.p.55a49564.ttf",
+      "static/media/HindSiliguri_SemiBold-s.p.345af7b6.ttf",
+      "static/media/HindSiliguri_Bold-s.p.6da64bd8.ttf"
+    ]
+  },
+  "appUsingSizeAdjust": true,
+  "pagesUsingSizeAdjust": false
+}

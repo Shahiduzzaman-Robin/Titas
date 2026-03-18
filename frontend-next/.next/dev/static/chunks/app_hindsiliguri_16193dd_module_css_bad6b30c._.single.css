@@ -1,0 +1,59 @@
+/* [project]/app/hindsiliguri_16193dd.module.css [app-client] (css) */
+@font-face {
+  font-family: hindSiliguri;
+  src: url("../media/HindSiliguri_Light-s.p.974baa0c.ttf") format("truetype");
+  font-display: swap;
+  font-weight: 300;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: hindSiliguri;
+  src: url("../media/HindSiliguri_Regular-s.p.83634f9a.ttf") format("truetype");
+  font-display: swap;
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: hindSiliguri;
+  src: url("../media/HindSiliguri_Medium-s.p.55a49564.ttf") format("truetype");
+  font-display: swap;
+  font-weight: 500;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: hindSiliguri;
+  src: url("../media/HindSiliguri_SemiBold-s.p.345af7b6.ttf") format("truetype");
+  font-display: swap;
+  font-weight: 600;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: hindSiliguri;
+  src: url("../media/HindSiliguri_Bold-s.p.6da64bd8.ttf") format("truetype");
+  font-display: swap;
+  font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: hindSiliguri Fallback;
+  src: local(Arial);
+  ascent-override: 115.35%;
+  descent-override: 51.78%;
+  line-gap-override: 0.0%;
+  size-adjust: 96.75%;
+}
+
+.hindsiliguri_16193dd-module__0O687W__className {
+  font-family: hindSiliguri, hindSiliguri Fallback;
+}
+
+.hindsiliguri_16193dd-module__0O687W__variable {
+  --font-hind: "hindSiliguri", "hindSiliguri Fallback";
+}
+
+/*# sourceMappingURL=app_hindsiliguri_16193dd_module_css_bad6b30c._.single.css.map*/

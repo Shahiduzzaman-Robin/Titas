@@ -1,0 +1,236 @@
+/* [project]/styles/AdminSettings.css [app-client] (css) */
+.as-page-header {
+  border-bottom: 1px solid #e5e7eb;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2.5rem;
+  padding-bottom: 1.5rem;
+  display: flex;
+}
+
+.as-page-header-icon {
+  color: #6b7280;
+  background: #f3f4f6;
+  border-radius: 12px;
+  flex-shrink: 0;
+  justify-content: center;
+  align-items: center;
+  width: 48px;
+  height: 48px;
+  display: flex;
+}
+
+.as-page-title {
+  color: #1f2937;
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.as-page-subtitle {
+  color: #9ca3af;
+  margin: .25rem 0 0;
+  font-size: .875rem;
+  font-weight: 400;
+}
+
+.as-grid {
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  max-width: 960px;
+  display: grid;
+}
+
+@media (max-width: 800px) {
+  .as-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.as-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 2rem;
+  transition: box-shadow .2s;
+  box-shadow: 0 1px 2px #0000000a;
+}
+
+.as-card:hover {
+  box-shadow: 0 4px 12px #0000000f;
+}
+
+.as-card-header {
+  border-bottom: 1px solid #f3f4f6;
+  align-items: center;
+  gap: .875rem;
+  margin-bottom: 1.75rem;
+  padding-bottom: 1.25rem;
+  display: flex;
+}
+
+.as-card-icon {
+  border-radius: 10px;
+  flex-shrink: 0;
+  justify-content: center;
+  align-items: center;
+  width: 42px;
+  height: 42px;
+  display: flex;
+}
+
+.as-card-icon-profile, .as-card-icon-security {
+  color: #6b7280;
+  background: #f3f4f6;
+}
+
+.as-card-title {
+  color: #1f2937;
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.as-card-desc {
+  color: #9ca3af;
+  margin: .15rem 0 0;
+  font-size: .8rem;
+}
+
+.as-alert {
+  border-radius: 10px;
+  align-items: center;
+  gap: .5rem;
+  margin-bottom: 1.25rem;
+  padding: .75rem 1rem;
+  font-size: .85rem;
+  font-weight: 500;
+  display: flex;
+}
+
+.as-alert-success {
+  color: #166534;
+  background: #f0fdf4;
+  border: 1px solid #d1fae5;
+}
+
+.as-alert-error {
+  color: #991b1b;
+  background: #fef2f2;
+  border: 1px solid #fee2e2;
+}
+
+.as-field {
+  margin-bottom: 1.25rem;
+}
+
+.as-label {
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: .3px;
+  align-items: center;
+  gap: .4rem;
+  margin-bottom: .5rem;
+  font-size: .8rem;
+  font-weight: 600;
+  display: flex;
+}
+
+.as-input {
+  color: #1f2937;
+  box-sizing: border-box;
+  background: #fafafa;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 10px;
+  outline: none;
+  width: 100%;
+  padding: .75rem 1rem;
+  font-family: inherit;
+  font-size: .925rem;
+  transition: all .2s;
+}
+
+.as-input::placeholder {
+  color: #c0c5cc;
+}
+
+.as-input:focus {
+  background: #fff;
+  border-color: #9ca3af;
+  box-shadow: 0 0 0 3px #9ca3af26;
+}
+
+.as-input-wrap {
+  position: relative;
+}
+
+.as-input-wrap .as-input {
+  padding-right: 2.75rem;
+}
+
+.as-eye-btn {
+  color: #9ca3af;
+  cursor: pointer;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  justify-content: center;
+  align-items: center;
+  padding: 4px;
+  transition: color .2s;
+  display: flex;
+  position: absolute;
+  top: 50%;
+  right: .75rem;
+  transform: translateY(-50%);
+}
+
+.as-eye-btn:hover {
+  color: #6b7280;
+}
+
+.as-btn {
+  cursor: pointer;
+  border: none;
+  border-radius: 10px;
+  justify-content: center;
+  align-items: center;
+  gap: .5rem;
+  width: 100%;
+  margin-top: .5rem;
+  padding: .75rem 1.5rem;
+  font-family: inherit;
+  font-size: .9rem;
+  font-weight: 600;
+  transition: all .2s;
+  display: inline-flex;
+}
+
+.as-btn:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+}
+
+.as-btn-save {
+  color: #fff;
+  background: #374151;
+}
+
+.as-btn-save:hover:not(:disabled) {
+  background: #1f2937;
+  box-shadow: 0 2px 8px #1f293740;
+}
+
+.as-btn-password {
+  color: #fff;
+  background: #6b7280;
+}
+
+.as-btn-password:hover:not(:disabled) {
+  background: #4b5563;
+  box-shadow: 0 2px 8px #4b556340;
+}
+
+/*# sourceMappingURL=styles_AdminSettings_css_bad6b30c._.single.css.map*/

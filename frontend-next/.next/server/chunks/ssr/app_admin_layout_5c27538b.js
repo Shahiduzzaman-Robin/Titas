@@ -1,0 +1,3 @@
+module.exports=[68386,a=>{"use strict";var b=a.i(87924),c=a.i(72131),d=a.i(50944);function e({children:a}){let[e,f]=(0,c.useState)(!1),g=(0,d.useRouter)();return((0,c.useEffect)(()=>{localStorage.getItem("admin_token")?f(!0):g.push("/login")},[g]),e)?(0,b.jsx)("div",{className:"admin-root",children:a}):(0,b.jsx)("div",{style:{display:"flex",alignItems:"center",justifyContent:"center",minHeight:"100vh",background:"#f1f5f9",color:"#64748b"},children:"Authenticating..."})}a.s(["default",()=>e])}];
+
+//# sourceMappingURL=app_admin_layout_5c27538b.js.map

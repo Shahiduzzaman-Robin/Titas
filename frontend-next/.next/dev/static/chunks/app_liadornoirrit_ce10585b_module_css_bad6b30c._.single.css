@@ -1,0 +1,59 @@
+/* [project]/app/liadornoirrit_ce10585b.module.css [app-client] (css) */
+@font-face {
+  font-family: liAdorNoirrit;
+  src: url("../media/Li_Ador_Noirrit_ExtraLight-s.p.9e02ec72.ttf") format("truetype");
+  font-display: swap;
+  font-weight: 200;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: liAdorNoirrit;
+  src: url("../media/Li_Ador_Noirrit_Light-s.p.0043e890.ttf") format("truetype");
+  font-display: swap;
+  font-weight: 300;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: liAdorNoirrit;
+  src: url("../media/Li_Ador_Noirrit_Regular-s.p.1323c715.ttf") format("truetype");
+  font-display: swap;
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: liAdorNoirrit;
+  src: url("../media/Li_Ador_Noirrit_SemiBold-s.p.2dcc0625.ttf") format("truetype");
+  font-display: swap;
+  font-weight: 600;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: liAdorNoirrit;
+  src: url("../media/Li_Ador_Noirrit_Bold-s.p.4b57cbef.ttf") format("truetype");
+  font-display: swap;
+  font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: liAdorNoirrit Fallback;
+  src: local(Arial);
+  ascent-override: 110.61%;
+  descent-override: 39.83%;
+  line-gap-override: 0.0%;
+  size-adjust: 87.88%;
+}
+
+.liadornoirrit_ce10585b-module__EiBEpW__className {
+  font-family: liAdorNoirrit, liAdorNoirrit Fallback;
+}
+
+.liadornoirrit_ce10585b-module__EiBEpW__variable {
+  --font-li-ador: "liAdorNoirrit", "liAdorNoirrit Fallback";
+}
+
+/*# sourceMappingURL=app_liadornoirrit_ce10585b_module_css_bad6b30c._.single.css.map*/

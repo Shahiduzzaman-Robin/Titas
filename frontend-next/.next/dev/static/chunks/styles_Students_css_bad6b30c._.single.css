@@ -1,0 +1,255 @@
+/* [project]/styles/Students.css [app-client] (css) */
+.students-page {
+  background-color: var(--bg-color);
+  min-height: calc(100vh - 70px);
+}
+
+.page-header {
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 1rem;
+}
+
+.student-count {
+  color: #0369a1;
+  background-color: #e0f2fe;
+  border-radius: 12px;
+  margin-left: 1rem;
+  padding: .2rem .8rem;
+  font-size: .85rem;
+  font-weight: 600;
+}
+
+.search-box {
+  width: 300px;
+  position: relative;
+}
+
+.search-icon {
+  color: var(--text-muted);
+  position: absolute;
+  top: 50%;
+  left: 1rem;
+  transform: translateY(-50%);
+}
+
+.search-input {
+  border: 1px solid var(--border-color);
+  background-color: #fff;
+  border-radius: 20px;
+  outline: none;
+  width: 100%;
+  padding: .6rem 1rem .6rem 2.5rem;
+}
+
+.search-input:focus {
+  border-color: var(--border-color);
+}
+
+.filters-capsule {
+  background-color: #fff;
+  border: 1px solid #f1f5f9;
+  border-radius: 12px;
+  margin-bottom: 2.5rem;
+  padding: .5rem;
+  box-shadow: 0 4px 15px -10px #0000001a;
+}
+
+.filters-row {
+  align-items: center;
+  gap: .5rem;
+  display: flex;
+}
+
+.filter-item {
+  flex: 1;
+}
+
+.dept-f {
+  flex: 1.2;
+}
+
+.session-f {
+  flex: .8;
+}
+
+.hall-f {
+  flex: 1.1;
+}
+
+.blood-f {
+  flex: .7;
+}
+
+.upazila-f {
+  flex: .9;
+}
+
+.filter-train-container {
+  border-left: 1px solid #f1f5f9;
+  width: 140px;
+  height: 44px;
+  padding-left: .5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.filter-train {
+  min-width: 140px !important;
+  height: 44px !important;
+}
+
+.filter-train .moving-train {
+  height: 24px !important;
+  animation: 6s linear infinite slideTrain !important;
+  bottom: 12px !important;
+}
+
+.filter-train .track-rail, .filter-train .sleeper {
+  bottom: 8px !important;
+}
+
+.student-grid {
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 1.5rem;
+  display: grid;
+}
+
+.student-card {
+  flex-direction: column;
+  padding: 1.5rem;
+  transition: transform .2s, box-shadow .2s;
+  display: flex;
+}
+
+.student-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px #0000000d;
+}
+
+.card-profile {
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  display: flex;
+  position: relative;
+}
+
+.profile-img, .profile-placeholder {
+  object-fit: cover;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+}
+
+.bg-gray {
+  background-color: #f3f4f6;
+  justify-content: center;
+  align-items: center;
+  display: flex;
+}
+
+.text-gray {
+  color: #9ca3af;
+}
+
+.profile-info h3 {
+  color: var(--primary-color);
+  margin-bottom: .25rem;
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.profile-meta {
+  color: var(--text-muted);
+  gap: .5rem;
+  font-size: .85rem;
+}
+
+.blood-badge {
+  color: var(--accent-red);
+  background-color: #fee2e2;
+  border-radius: 12px;
+  align-items: center;
+  gap: .3rem;
+  padding: .2rem .6rem;
+  font-size: .85rem;
+  font-weight: 700;
+  display: flex;
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
+.card-details {
+  background-color: #f8fafc;
+  border-radius: 8px;
+  flex-direction: column;
+  flex: 1;
+  gap: .75rem;
+  margin-bottom: 1.25rem;
+  padding: 1rem;
+  display: flex;
+}
+
+.detail-item {
+  align-items: flex-start;
+  gap: .75rem;
+  font-size: .9rem;
+  display: flex;
+}
+
+.role-item {
+  margin-bottom: .5rem;
+}
+
+.primary-text {
+  color: var(--accent-blue);
+  font-weight: 600;
+}
+
+.secondary-text {
+  color: var(--accent-blue);
+  opacity: .8;
+  font-size: .8rem;
+}
+
+.text-blue {
+  color: var(--accent-blue);
+}
+
+.card-contact {
+  border-top: 1px solid var(--border-color);
+  flex-direction: column;
+  gap: .5rem;
+  padding-top: 1rem;
+  display: flex;
+}
+
+.contact-item {
+  align-items: center;
+  gap: .5rem;
+  font-size: .85rem;
+  display: flex;
+}
+
+@media (max-width: 768px) {
+  .hidden-mobile {
+    display: none;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+
+  .search-box {
+    width: 100%;
+  }
+
+  .student-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/*# sourceMappingURL=styles_Students_css_bad6b30c._.single.css.map*/
