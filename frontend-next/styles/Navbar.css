@@ -234,10 +234,12 @@
         z-index: 100;
         align-items: flex-start;
         gap: 2rem;
+        visibility: hidden; /* Added to prevent horizontal scroll */
     }
 
     .nav-actions.menu-open {
         right: 0;
+        visibility: visible; /* Show when menu is open */
     }
 
     .nav-links-capsule {

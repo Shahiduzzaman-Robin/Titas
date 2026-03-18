@@ -47,3 +47,9 @@ backend/uploads/*
 !backend/uploads/.gitkeep
 backend/data/
 frontend/dist/
+
+# Next.js
+frontend-next/.next/
+frontend-next/out/
+frontend-next/next-env.d.ts
+frontend-next/.DS_Store

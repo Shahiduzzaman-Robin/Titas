@@ -6,6 +6,7 @@ import { UserPlus, Calendar, ArrowRight, BookOpen, Users, MapPin, Award, Externa
 import Image from 'next/image';
 import axios from 'axios';
 import TrainAnimation from '../components/TrainAnimation';
+import Slider from '../components/Slider';
 import ContactForm from '../components/ContactForm';
 import Footer from '../components/Footer';
 
@@ -225,7 +226,7 @@ export default function Home() {
                     </h1>
 
                     <p className="hero-modern-mission bn-text">
-                        ঢাকা বিশ্ববিদ্যালয়ে অধ্যয়নরত ব্রাহ্মণবাড়িয়া জেলার শিক্ষার্থীদের মেধা, মনন ও ঐক্যের প্রতীক। আসুন, একসাথে একটি শক্তিশালী নেটওয়ার্ক গড়ে তুলি।
+                        ঢাকা বিশ্ববিদ্যালয়স্থ ব্রাহ্মণবাড়িয়া জেলার শিক্ষার্থীদের মেধা, মনন ও ঐক্যের প্রতীক। তিতাস মানেই একতা।
                     </p>
 
                     <div className="hero-modern-actions">
@@ -238,6 +239,13 @@ export default function Home() {
                             <span>ইভেন্ট দেখুন</span>
                         </a>
                     </div>
+                </div>
+            </section>
+
+            {/* MODERN SLIDER SECTION */}
+            <section className="slider-section">
+                <div className="container">
+                    <Slider />
                 </div>
             </section>
 
