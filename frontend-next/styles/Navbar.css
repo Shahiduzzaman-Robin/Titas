@@ -234,7 +234,8 @@
         z-index: 100;
         align-items: flex-start;
         gap: 2rem;
-        visibility: hidden; /* Added to prevent horizontal scroll */
+        visibility: hidden;
+        overflow-y: auto;
     }
 
     .nav-actions.menu-open {
@@ -271,5 +272,22 @@
 
     .logo-text .subtitle {
         display: none;
+    }
+
+    .user-menu-wrapper {
+        width: 100%;
+    }
+
+    .user-dropdown {
+        position: static;
+        width: 100%;
+        margin-top: 0.75rem;
+        box-shadow: none;
+        border: 1px solid #e2e8f0;
+        background: #f8fafc;
+    }
+
+    .user-dropdown .dropdown-header {
+        padding: 1rem;
     }
 }

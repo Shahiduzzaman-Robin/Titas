@@ -9,46 +9,56 @@
 
 ---
 
-## ✨ Key Features & Visuals
+## ✨ Key Features & Visual Summaries
 
 ### 🎡 Modern Cinematic Slider
 A lightweight, high-performance custom carousel featuring **glassmorphism** controls, infinite seamless looping, and cinematic shadows.
-![Homepage Hero & Slider](/Users/robin/.gemini/antigravity/brain/3f220bfb-c368-446a-9ec7-22e23bdbe554/homepage_hero_slider_1773799887722.png)
+![Homepage Hero & Slider](docs/screenshots/hero_slider.png)
 
 ### 👥 Advanced Student Directory
 A fully searchable and filterable directory with real-time API integration. Supports masked mobile numbers and privacy-first data handling.
-![Students Directory](/Users/robin/.gemini/antigravity/brain/3f220bfb-c368-446a-9ec7-22e23bdbe554/students_directory_page_1773799920034.png)
+![Students Directory](docs/screenshots/students_directory.png)
 
 ### ✍️ Premium Blog Engine
-Full-featured journalism platform with dynamic SEO meta tags, view counting, and a rich-text editor for administrators.
-![Blog List](/Users/robin/.gemini/antigravity/brain/3f220bfb-c368-446a-9ec7-22e23bdbe554/blog_list_page_1773799911043.png)
+Full-featured journalism platform with dynamic SEO meta tags (OpenGraph), view counting, and a specialized rich-text editor for administrators.
+![Blog List](docs/screenshots/blog_list.png)
 
-### 📱 Superior Mobile Responsiveness
-Every component is meticulously tuned for mobile viewports using `clamp()` typography and adaptive layouts.
-````carousel
-![Mobile Hero](/Users/robin/.gemini/antigravity/brain/3f220bfb-c368-446a-9ec7-22e23bdbe554/hero_mobile_390_attempt_1773798971562.png)
-<!-- slide -->
-![Mobile Filters](/Users/robin/.gemini/antigravity/brain/3f220bfb-c368-446a-9ec7-22e23bdbe554/students_mobile_view_extended_1773799522494.png)
-<!-- slide -->
-![Mobile Constitution](/Users/robin/.gemini/antigravity/brain/3f220bfb-c368-446a-9ec7-22e23bdbe554/constitution_mobile_view_1773799634101.png)
-````
+---
+
+## 🔐 Advanced Admin Panel (Superpower)
+
+The Titas Admin Panel provides a robust command center for community moderators.
+
+### 📊 Main Dashboard
+Real-time statistics on student registrations, blog performance, and pending membership requests.
+![Admin Dashboard](docs/screenshots/admin_dashboard.png)
+
+### 📂 Comprehensive Management
+- **Student Management**: Approve/reject registrations, update profiles, and manage status with a professional table interface.
+- **Blog & News**: Full CRUD with ReactQuill integration for high-quality content production.
+- **Notices & Events**: Keep the community informed with real-time notice boards and event tracking.
+![Admin Student Management](docs/screenshots/admin_students.png)
+
+---
+
+## 📱 Mobile-First Excellence
+Every component is meticulously tuned for mobile viewports using `clamp()` typography and adaptive layouts. The profile menu is now fully accessible on all devices.
+![Mobile Menu & Navigation](docs/screenshots/mobile_menu.png)
 
 ---
 
 ## 🛠 Tech Stack
 
-### Frontend (Modern)
-- **Framework**: Next.js 15+ (App Router)
-- **State Management**: React 19 Hooks & Server Components
-- **Typography**: Optimized local font delivery (SolaimanLipi, Hind Siliguri, Li Ador Noirrit)
-- **Icons**: Lucide React
-- **Styling**: Vanilla CSS3 + Modern CSS Variables (Theming)
+### Frontend (Next.js 15+)
+- **React 19**: Leveraging the latest concurrent features.
+- **App Router**: Optimized server-side rendering and static generation.
+- **Typography**: Optimized local font delivery (**SolaimanLipi**, **Hind Siliguri**, **Li Ador Noirrit**).
+- **Styling**: Vanilla CSS3 + Modern CSS Variables (Theming) & Glassmorphism.
 
 ### Backend (Robust)
-- **Server**: Node.js & Express.js
-- **Database**: MongoDB
-- **Auth**: JWT-based Secure Authentication
-- **Media**: Optimized image handling with `next/image`
+- **Node.js & Express.js**: High-availability API server.
+- **MongoDB**: Flexible NoSQL document storage.
+- **JWT**: Secure, stateless authentication.
 
 ---
 
@@ -57,26 +67,28 @@ Every component is meticulously tuned for mobile viewports using `clamp()` typog
 ```bash
 ├── backend/                # Express API Server (Port 5010)
 ├── frontend-next/          # Modern Next.js Application (Port 3000)
-│   ├── app/                # App Router (Pages, Layouts)
+│   ├── app/                # App Router (Pages, Layouts, API Routes)
 │   ├── components/         # Reusable UI Components
-│   ├── public/             # Static Assets & Local Fonts
-│   └── styles/             # Modular CSS System
+│   ├── public/             # Static Assets, Local Fonts & Desktop Images
+│   └── styles/             # Modular & Global CSS
+├── docs/                   # Documentation & README Assets
+│   └── screenshots/        # High-Resolution UI Screenshots
 └── legacy-react-frontend/  # Archived Original SPA
 ```
 
 ---
 
-## 🚀 Installation & Setup
+## 🚀 Installation & Rapid Setup
 
 ### Prerequisites
-- Node.js 18.x or higher
-- MongoDB running locally or a remote URI
+- Node.js 18.x+
+- MongoDB 7.0+ (Local or Remote)
 
 ### 1. Backend Setup
 ```bash
 cd backend
 npm install
-# Create a .env file based on .env.example
+# Configure your .env (sample provided)
 npm run dev
 ```
 
@@ -87,14 +99,14 @@ npm install
 npm run dev
 ```
 
-The app will be available at [http://localhost:3000](http://localhost:3000).
+Visit [http://localhost:3000](http://localhost:3000) to view the portal.
 
 ---
 
-## 🔒 Security & Performance
-- **Hydration Safety**: Built-in protection against browser-extension-induced hydration mismatches.
-- **Privacy**: Automated data masking for sensitive student contact information.
-- **Speed**: Optimized LCP via `priority` loading and `next/image` conversion.
+## 🔒 Security & Optimization
+- **Privacy Masking**: Automated data protection for student contact info.
+- **Hydration Protection**: Built-in immunity to browser-extension-induced DOM mismatches.
+- **Performance**: 100% Next.js Image optimization for rapid LCP.
 
 ---
-*Developed with ❤️ by the Titas DU Digital Transformation Team.*
+**Developed with ❤️ by [Shahiduzzaman Robin](https://github.com/Shahiduzzaman-Robin)**
